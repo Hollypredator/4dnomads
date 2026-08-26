@@ -1,0 +1,32 @@
+.page { padding: var(--space-10) 0; }
+.container { max-width: 1000px; margin: 0 auto; padding: 0 var(--space-6); }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-8); }
+.title { font-size: var(--font-size-3xl); margin-bottom: var(--space-1); }
+
+.searchBar { position: relative; max-width: 480px; margin-bottom: var(--space-8); }
+.searchIcon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary); }
+.searchInput {
+  width: 100%; padding: 10px 16px 10px 42px; font-family: var(--font-family); font-size: var(--font-size-sm);
+  border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-card);
+}
+.searchInput:focus { outline: none; border-color: var(--primary); }
+
+.grid { display: grid; grid-template-columns: 1fr; gap: var(--space-6); }
+
+.userSection { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
+.userName { font-weight: 600; color: var(--text-primary); }
+.userName:hover { text-decoration: underline; color: var(--primary); }
+.dateText { display: block; font-size: var(--font-size-xs); color: var(--text-tertiary); margin-top: 2px; }
+
+.tripMeta { margin-bottom: var(--space-3); }
+.tripMeta h3 { font-size: var(--font-size-base); font-weight: 700; margin-bottom: var(--space-1); }
+
+.description { font-size: var(--font-size-sm); color: var(--text-secondary); line-height: 1.6; margin-bottom: var(--space-5); white-space: pre-line; }
+
+.actions { display: flex; gap: var(--space-3); align-items: center; border-top: 1px solid var(--border-light); padding-top: var(--space-4); }
+
+.empty { text-align: center; padding: var(--space-16) 0; }
+
+@media (max-width: 768px) {
+  .header { flex-direction: column; align-items: flex-start; gap: var(--space-4); }
+}

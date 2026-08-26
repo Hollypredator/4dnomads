@@ -1,0 +1,143 @@
+.page {
+  padding: var(--space-10) 0;
+}
+
+.layout {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 var(--space-6);
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: var(--space-8);
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.avatarPanel {
+  text-align: center;
+}
+
+.mainAvatar {
+  margin: 0 auto var(--space-4);
+}
+
+.name {
+  font-size: var(--font-size-2xl);
+  margin-bottom: var(--space-1);
+}
+
+.verifiedBadge {
+  margin-top: var(--space-3);
+}
+
+.statRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.bio {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+.interests {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.homeGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.homeItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.amenities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.amenityTag {
+  padding: 4px 12px;
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  background: var(--gray-100);
+  color: var(--text-secondary);
+  border-radius: var(--radius-full);
+}
+
+.rules {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-top: var(--space-2);
+  line-height: 1.6;
+}
+
+.reviewsList {
+  display: flex;
+  flex-direction: column;
+}
+
+.reviewItem {
+  padding: var(--space-5) 0;
+  border-bottom: 1px solid var(--border-light);
+}
+.reviewItem:first-child { padding-top: 0; }
+.reviewItem:last-child { border-bottom: none; padding-bottom: 0; }
+
+.reviewHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-3);
+}
+
+.reviewAuthor {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.reviewText {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.noReviews {
+  text-align: center;
+  padding: var(--space-8) 0;
+}
+
+.empty {
+  text-align: center;
+  padding: var(--space-20) 0;
+}
+
+@media (max-width: 768px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}

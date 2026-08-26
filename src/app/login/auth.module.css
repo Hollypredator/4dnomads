@@ -1,0 +1,12 @@
+.page { padding: var(--space-16) 0; display: flex; justify-content: center; }
+.card { width: 100%; max-width: 420px; margin: 0 var(--space-6); }
+.title { text-align: center; font-size: var(--font-size-2xl); margin-bottom: var(--space-2); }
+.form { display: flex; flex-direction: column; gap: var(--space-5); }
+.divider {
+  display: flex; align-items: center; gap: var(--space-4);
+  margin: var(--space-5) 0; color: var(--text-tertiary); font-size: var(--font-size-sm);
+}
+.divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--border-light); }
+.footer { text-align: center; margin-top: var(--space-5); font-size: var(--font-size-sm); color: var(--text-secondary); }
+.link { color: var(--primary); font-weight: 500; }
+.link:hover { text-decoration: underline; }

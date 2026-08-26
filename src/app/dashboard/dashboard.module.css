@@ -1,0 +1,39 @@
+.page { padding: var(--space-10) 0; }
+.container { max-width: 900px; margin: 0 auto; padding: 0 var(--space-6); }
+.header { margin-bottom: var(--space-6); }
+.title { font-size: var(--font-size-3xl); margin-bottom: var(--space-1); }
+
+.tabs { display: flex; gap: var(--space-1); border-bottom: 1px solid var(--border); margin-bottom: var(--space-6); }
+.tab {
+  padding: var(--space-3) var(--space-5);
+  font-family: var(--font-family); font-size: var(--font-size-sm); font-weight: 500;
+  color: var(--text-secondary); background: none; border: none;
+  border-bottom: 2px solid transparent; cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.tab:hover { color: var(--text-primary); }
+.tabActive { color: var(--primary); border-bottom-color: var(--primary); }
+
+.list { display: flex; flex-direction: column; gap: var(--space-4); }
+
+.requestCard {
+  padding: var(--space-6);
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: var(--space-6);
+}
+
+.requestInfo { display: flex; gap: var(--space-4); flex: 1; min-width: 0; }
+.requestDetails { flex: 1; min-width: 0; }
+.requestName { font-weight: 600; color: var(--primary); }
+.requestName:hover { text-decoration: underline; }
+.requestMessage { font-size: var(--font-size-sm); color: var(--text-tertiary); font-style: italic; margin-top: var(--space-2); }
+
+.requestActions { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-3); flex-shrink: 0; }
+.actionBtns { display: flex; gap: var(--space-2); }
+
+.empty { text-align: center; padding: var(--space-16) 0; }
+
+@media (max-width: 768px) {
+  .requestCard { flex-direction: column; }
+  .requestActions { flex-direction: row; flex-wrap: wrap; align-items: center; width: 100%; }
+}

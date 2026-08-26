@@ -1,0 +1,17 @@
+.page { padding: var(--space-10) 0; }
+.container { max-width: 520px; margin: 0 auto; padding: 0 var(--space-6); }
+.card { text-align: center; }
+.title { font-size: var(--font-size-2xl); margin-bottom: var(--space-4); }
+.desc { font-size: var(--font-size-sm); color: var(--text-secondary); line-height: 1.7; margin-bottom: var(--space-6); }
+.amounts { display: flex; gap: var(--space-3); justify-content: center; flex-wrap: wrap; }
+.amountBtn {
+  padding: var(--space-3) var(--space-6); font-family: var(--font-family);
+  font-size: var(--font-size-lg); font-weight: 600;
+  background: var(--bg-page); border: 1px solid var(--border);
+  border-radius: var(--radius-md); cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.amountBtn:hover { border-color: var(--primary); background: var(--amber-50); }
+.customAmount { position: relative; }
+.currency { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary); font-weight: 600; }
+.hint { font-size: var(--font-size-xs); color: var(--text-tertiary); margin-top: var(--space-4); }
