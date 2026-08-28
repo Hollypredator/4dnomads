@@ -36,6 +36,8 @@ export interface Home {
   kidFriendly: boolean;
   wheelchairAccessible: boolean;
   blockoutDates: string[]; // YYYY-MM-DD strings
+  /** Self-reported download speed in Mbps. null means the host didn't say. */
+  wifiMbps: number | null;
 }
 
 export interface StayRequest {
@@ -196,4 +198,9 @@ export interface EmergencyAlertWithAuthor extends EmergencyAlert {
 
 export interface CommunityVouchWithAuthor extends CommunityVouch {
   author: User;
+}
+
+/** What getRecentVouches() returns: both sides resolved, for the feed. */
+export interface CommunityVouchWithTarget extends CommunityVouchWithAuthor {
+  target: User;
 }

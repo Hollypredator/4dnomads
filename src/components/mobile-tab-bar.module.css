@@ -1,0 +1,163 @@
+.tabBar {
+  display: none; /* shown only on mobile, see media query below */
+}
+
+@media (max-width: 768px) {
+  .tabBar {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 200;
+    background: var(--m3-surface-container-lowest);
+    /* Top corners rounded and an upward-cast shadow standing in for a
+       border -- the bar reads as a raised surface sitting over the page
+       rather than a strip cut off the bottom of it. */
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    box-shadow: 0 -4px 16px rgba(13, 29, 43, 0.08);
+    /* Safe-area inset so the bar clears the home-indicator on notched
+       phones instead of sitting under it -- one of the concrete things
+       that separates "a responsive site" from "feels like a real app". */
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 0 6px;
+  min-height: 56px;
+  color: var(--text-tertiary);
+  background: none;
+  border: none;
+  font-family: var(--font-family);
+  cursor: pointer;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.tab span {
+  font-size: 10px;
+  font-weight: 600;
+  transition: color var(--transition-fast), font-weight var(--transition-fast);
+}
+
+/* Material 3's pill indicator: the selected icon sits inside a tinted
+   rounded-full capsule sized to the icon, not the whole column -- the
+   label stays outside it and simply changes weight/colour. Replaces the
+   old "whole tab turns orange" treatment, which had no distinct "this is
+   the active one" shape, only a colour a colourblind user could miss. */
+.iconWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  transition: background var(--transition-fast), transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.iconWrapActive {
+  background: var(--m3-secondary-container);
+  color: var(--m3-on-secondary-container);
+}
+
+.tab:active .iconWrap {
+  transform: scale(0.88);
+}
+
+.labelActive {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+/* ── "More" bottom sheet ── */
+.sheetOverlay {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .sheetOverlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    background: rgba(13, 29, 43, 0.4);
+    animation: fadeIn 150ms ease-out;
+  }
+}
+
+.sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-card);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  padding: var(--space-2) var(--space-2) calc(var(--space-4) + env(safe-area-inset-bottom, 0));
+  max-height: 70vh;
+  overflow-y: auto;
+  animation: slideUp 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sheetHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+}
+
+.sheetClose {
+  background: var(--bg-hover);
+  border: none;
+  border-radius: var(--radius-full);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-primary);
+}
+
+.sheetLinks {
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--space-2);
+}
+
+.sheetLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+}
+.sheetLink:active {
+  background: var(--bg-hover);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheetOverlay,
+  .sheet {
+    animation: none;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}

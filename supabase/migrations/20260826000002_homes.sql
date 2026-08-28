@@ -8,6 +8,10 @@
 -- pin only as a transient RPC argument; only a randomly offset point is
 -- ever written to disk. The real address is exchanged in chat once a stay
 -- request is accepted.
+--
+-- PostGIS lives in the `extensions` schema (Supabase's default, kept out of
+-- search_path deliberately), so every type and function below is schema-
+-- qualified rather than relying on search_path.
 -- ──────────────────────────────────────────────
 
 create type public.hosting_status as enum ('accepting', 'maybe', 'not_accepting', 'wants_to_meet');
@@ -26,7 +30,7 @@ create table public.homes (
 
   location_name text not null check (char_length(location_name) between 1 and 120),
   -- Fuzzed point only. There is deliberately no exact-coordinate column.
-  approx_coordinates geography(point) not null,
+  approx_coordinates extensions.geography(point) not null,
 
   smoking_policy public.smoking_policy not null default 'Not allowed',
   pets_info text not null default '' check (char_length(pets_info) <= 500),
@@ -51,12 +55,12 @@ create trigger homes_set_updated_at
 -- 200m-1000m band, using geography math so the offset is in real meters
 -- regardless of latitude.
 create or replace function public.fuzz_point(lat double precision, lng double precision)
-returns geography
+returns extensions.geography
 language sql
 stable
 as $$
-  select ST_Project(
-    ST_SetSRID(ST_MakePoint(lng, lat), 4326)::geography,
+  select extensions.ST_Project(
+    extensions.ST_SetSRID(extensions.ST_MakePoint(lng, lat), 4326)::extensions.geography,
     200 + random() * 800,        -- 200m to 1000m
     random() * 2 * pi()          -- random bearing, radians
   );
@@ -84,7 +88,7 @@ create or replace function public.upsert_home(
 returns public.homes
 language plpgsql
 security invoker
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   result public.homes;
@@ -132,7 +136,7 @@ returns double precision
 language sql
 stable
 as $$
-  select ST_Y($1.approx_coordinates::geometry);
+  select extensions.ST_Y($1.approx_coordinates::extensions.geometry);
 $$;
 
 create or replace function public.approx_lng(public.homes)
@@ -140,7 +144,7 @@ returns double precision
 language sql
 stable
 as $$
-  select ST_X($1.approx_coordinates::geometry);
+  select extensions.ST_X($1.approx_coordinates::extensions.geometry);
 $$;
 
 grant execute on function public.approx_lat to authenticated, anon;
@@ -157,15 +161,16 @@ create or replace function public.homes_near(
 returns setof public.homes
 language sql
 stable
+set search_path = public, extensions
 as $$
   select *
   from public.homes
-  where ST_DWithin(
+  where extensions.ST_DWithin(
     approx_coordinates,
-    ST_SetSRID(ST_MakePoint(p_lng, p_lat), 4326)::geography,
+    extensions.ST_SetSRID(extensions.ST_MakePoint(p_lng, p_lat), 4326)::extensions.geography,
     least(p_radius_meters, 200000) -- cap at 200km, guards against an unbounded scan
   )
-  order by approx_coordinates <-> ST_SetSRID(ST_MakePoint(p_lng, p_lat), 4326)::geography
+  order by approx_coordinates <-> extensions.ST_SetSRID(extensions.ST_MakePoint(p_lng, p_lat), 4326)::extensions.geography
   limit least(p_limit, 100)
   offset greatest(p_offset, 0);
 $$;

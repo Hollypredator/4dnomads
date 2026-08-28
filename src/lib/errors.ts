@@ -61,10 +61,17 @@ function classify(error: PostgrestError): { kind: AppErrorKind; message: string 
  * typed AppError -- there is no path through this function that silently
  * drops a failure. `notFound()` short-circuits the two "doesn't exist"
  * classes so Server Components render the 404 boundary directly.
+ *
+ * `context.mutation: true` is for insert/update().select().single() calls:
+ * an RLS WITH CHECK denial returns `{ data: null, error: null }` from
+ * Postgrest -- no PostgrestError to classify -- so without this flag a
+ * blocked write is indistinguishable from "no rows" and renders a 404
+ * instead of "you don't have permission." Reads should never set this; an
+ * absent row on a read really is not-found.
  */
 export function unwrap<T>(
   result: { data: T | null; error: PostgrestError | null },
-  context: { op: string; args?: Record<string, unknown> }
+  context: { op: string; args?: Record<string, unknown>; mutation?: boolean }
 ): T {
   if (result.error) {
     const { kind, message } = classify(result.error);
@@ -87,12 +94,41 @@ export function unwrap<T>(
   }
 
   if (result.data === null) {
+    if (context.mutation) {
+      console.error("[supabase] mutation returned null with no error -- likely an RLS WITH CHECK denial", context);
+      throw new AppError("forbidden", "You do not have permission to do that.");
+    }
     // A successful call with no error and no data means "no rows" for
     // .single()/.maybeSingle() reads keyed by an id from the URL.
     console.warn("[supabase] null data with no error", context);
     notFound();
   }
 
+  return result.data;
+}
+
+/**
+ * For `.maybeSingle()` reads where "no row" is a legitimate, silent
+ * outcome (return null) but any actual error (invalid UUID -> 22P02,
+ * multiple rows, etc.) must still be logged and thrown -- not swallowed
+ * just because `data` happens to be null on the error path too.
+ */
+export function unwrapMaybe<T>(
+  result: { data: T | null; error: PostgrestError | null },
+  context: { op: string; args?: Record<string, unknown> }
+): T | null {
+  if (result.error) {
+    const { kind, message } = classify(result.error);
+    console.error("[supabase]", {
+      op: context.op,
+      args: context.args,
+      kind,
+      code: result.error.code,
+      pgMessage: result.error.message,
+    });
+    if (kind === "not_found") return null; // e.g. malformed id -> treat as "not found", but we still logged it
+    throw new AppError(kind, message, result.error);
+  }
   return result.data;
 }
 
@@ -125,4 +161,21 @@ export function unwrapList<T>(
     throw new AppError(kind, message, result.error);
   }
   return result.data ?? [];
+}
+
+/**
+ * Every Server Action follows the same shape: call a lib/data function,
+ * catch AppError and turn it into a client-visible `{ ok: false, error }`,
+ * let anything else (a genuine bug, not a classified failure) propagate to
+ * Next.js's error boundary rather than being swallowed. This was previously
+ * copy-pasted into every action file; a new action that forgot the catch
+ * would leak an AppError to the client as a bare 500.
+ */
+export async function runAction<T>(fn: () => Promise<T>): Promise<{ ok: true; data: T } | { ok: false; error: string }> {
+  try {
+    return { ok: true, data: await fn() };
+  } catch (err) {
+    if (err instanceof AppError) return { ok: false, error: err.message };
+    throw err;
+  }
 }

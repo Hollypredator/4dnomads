@@ -7,7 +7,7 @@ export default function Footer() {
       <div className={styles.container}>
         <div className={styles.grid}>
           <div className={styles.brand}>
-            <Link href="/" className={styles.logo}>Nomads.</Link>
+            <Link href="/" className={styles.logo}>4dnomads.</Link>
             <p className={styles.tagline}>
               Stay with locals. Belong anywhere.<br />
               100% free, forever.
@@ -37,7 +37,7 @@ export default function Footer() {
         </div>
 
         <div className={styles.bottom}>
-          <p>© {new Date().getFullYear()} Nomads. Built with ❤️ for the travel community.</p>
+          <p>© {new Date().getFullYear()} 4dnomads. A free hospitality exchange, built by the people who use it.</p>
         </div>
       </div>
     </footer>

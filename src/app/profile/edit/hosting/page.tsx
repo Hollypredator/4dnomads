@@ -1,5 +1,6 @@
 import { requireSession } from "@/lib/session";
 import { getHomeByHostId } from "@/lib/data/homes";
+import { MobileHeader } from "@/components/MobileHeader";
 import HostingForm from "./HostingForm";
 import styles from "./hosting.module.css";
 
@@ -18,6 +19,7 @@ const DEFAULT_HOME = {
   kidFriendly: false,
   wheelchairAccessible: false,
   blockoutDates: [] as string[],
+  wifiMbps: null as number | null,
 };
 
 export default async function EditHostingPage() {
@@ -25,15 +27,18 @@ export default async function EditHostingPage() {
   const existing = await getHomeByHostId(session.authUserId);
 
   return (
-    <div className={styles.page}>
+    <>
+      <MobileHeader title="Hosting Settings" backHref="/profile/edit" />
+      <div className={styles.page}>
       <div className={styles.container}>
-        <header className={styles.header}>
+        <header className={`${styles.header} desktop-only`}>
           <h1>Hosting & Availability Settings</h1>
           <p className="text-secondary text-sm">Configure how and when you want to host guests.</p>
         </header>
 
         <HostingForm home={existing ?? DEFAULT_HOME} />
       </div>
-    </div>
+      </div>
+    </>
   );
 }

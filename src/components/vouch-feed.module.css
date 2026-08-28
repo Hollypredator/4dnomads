@@ -1,0 +1,104 @@
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.avatarLink {
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.headText {
+  min-width: 0;
+  flex: 1;
+}
+
+.line {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.name {
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.name:hover {
+  text-decoration: underline;
+}
+
+.muted {
+  color: var(--text-secondary);
+}
+
+.verified {
+  color: var(--olive-600);
+  /* Sits between two links on the same line, so it needs to ride the text
+     baseline rather than the line box. */
+  vertical-align: -1px;
+  margin-left: 3px;
+}
+
+.time {
+  display: block;
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.quote {
+  margin: var(--space-3) 0 0;
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--terracotta-100);
+  font-size: var(--font-size-sm);
+  line-height: 1.65;
+  color: var(--text-primary);
+  /* Long vouches shouldn't turn the feed into a wall: clamp and let the
+     profile page carry the full text. */
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.empty {
+  text-align: center;
+  padding: var(--space-8) var(--space-5);
+  background: var(--sand-50);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.emptyTitle {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  margin: 0 0 var(--space-2);
+}
+
+.emptyBody {
+  margin: 0 auto;
+  max-width: 42ch;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+}

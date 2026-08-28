@@ -11,7 +11,16 @@
   border-radius: var(--radius-md); cursor: pointer;
   transition: all var(--transition-fast);
 }
-.amountBtn:hover { border-color: var(--primary); background: var(--amber-50); }
+.amountBtn:hover { border-color: var(--primary); background: var(--terracotta-50); }
 .customAmount { position: relative; }
 .currency { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary); font-weight: 600; }
 .hint { font-size: var(--font-size-xs); color: var(--text-tertiary); margin-top: var(--space-4); }
+
+/* Selected preset. aria-pressed carries the state for assistive tech; this
+   is the visual half. */
+.amountBtnActive {
+  background: var(--m3-primary-fixed);
+  border-color: var(--m3-primary-fixed-dim);
+  color: var(--m3-on-primary-fixed-variant);
+  font-weight: 700;
+}

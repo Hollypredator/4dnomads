@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { submitReviewAction } from "@/lib/actions/reviews";
+import { LockIcon, StarIcon } from "@/components/Icons";
 import styles from "./review.module.css";
 
 export default function ReviewForm({
@@ -39,10 +40,12 @@ export default function ReviewForm({
   if (submitted) {
     return (
       <div className={`panel panel-padded ${styles.card}`} style={{ textAlign: "center" }}>
-        <div style={{ fontSize: "3rem", marginBottom: 16 }}>🔒</div>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 16, color: "var(--primary)" }}>
+          <LockIcon size={40} />
+        </div>
         <h2 className="font-semibold text-xl">Review Submitted!</h2>
         <p className="text-secondary text-sm" style={{ marginTop: 8, marginBottom: 24, lineHeight: 1.6 }}>
-          Thank you! To ensure honesty, Nomads uses a <strong>Double-Blind Review system</strong>. Your review will
+          Thank you! To ensure honesty, 4dnomads uses a <strong>Double-Blind Review system</strong>. Your review will
           remain hidden until {targetFirstName} submits their review of you, or until 14 days have passed.
         </p>
         <button className="btn btn-primary" onClick={() => router.push("/dashboard")}>
@@ -54,7 +57,7 @@ export default function ReviewForm({
 
   return (
     <div className={`panel panel-padded ${styles.card}`}>
-      <h1 className={styles.title}>Write a Reference</h1>
+      <h1 className={`${styles.title} desktop-only`}>Write a Reference</h1>
       <p className="text-secondary text-sm text-center" style={{ marginBottom: 24 }}>
         Share your experience staying with or hosting <strong>{targetName}</strong>.
       </p>
@@ -64,8 +67,8 @@ export default function ReviewForm({
           <label className="form-label">How was your stay overall?</label>
           <div className={styles.stars}>
             {[1, 2, 3, 4, 5].map((star) => (
-              <button type="button" key={star} onClick={() => setRating(star)} className={styles.starBtn}>
-                {star <= rating ? "★" : "☆"}
+              <button type="button" key={star} onClick={() => setRating(star)} className={styles.starBtn} aria-label={`${star} star${star > 1 ? "s" : ""}`}>
+                <StarIcon size={32} fill={star <= rating ? "var(--amber-500)" : "none"} />
               </button>
             ))}
           </div>

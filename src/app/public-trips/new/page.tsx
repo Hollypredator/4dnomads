@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPublicTripAction } from "@/lib/actions/community";
+import { MobileHeader } from "@/components/MobileHeader";
 import styles from "../../request/[hostId]/request.module.css";
 
 export default function NewPublicTripPage() {
@@ -29,9 +30,11 @@ export default function NewPublicTripPage() {
   };
 
   return (
-    <div className={styles.page}>
+    <>
+      <MobileHeader title="Create Travel Plan" backHref="/public-trips" />
+      <div className={styles.page}>
       <div className={`panel panel-padded ${styles.card}`}>
-        <h1 className={styles.title} style={{ marginBottom: 24 }}>
+        <h1 className={`${styles.title} desktop-only`} style={{ marginBottom: 24 }}>
           Create Travel Plan
         </h1>
         <p className="text-secondary text-sm text-center" style={{ marginBottom: 32 }}>
@@ -88,6 +91,7 @@ export default function NewPublicTripPage() {
           </button>
         </form>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

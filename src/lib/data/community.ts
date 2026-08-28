@@ -1,5 +1,6 @@
+import { cache } from "react";
 import { createClient } from "@/utils/supabase/server";
-import { unwrap, unwrapList, unwrapVoid, AppError } from "@/lib/errors";
+import { unwrap, unwrapList, unwrapVoid, unwrapMaybe, AppError } from "@/lib/errors";
 import { mapPublicTripRow, mapLocalEventRow, mapProfileRow } from "@/lib/data/mappers";
 import type { PublicTripWithUser, LocalEventWithCreator } from "@/types";
 
@@ -8,7 +9,7 @@ const PROFILE_COLUMNS =
 
 // ── Public trips ──────────────────────────────
 
-export async function getPublicTrips(): Promise<PublicTripWithUser[]> {
+export const getPublicTrips = cache(async (): Promise<PublicTripWithUser[]> => {
   const supabase = await createClient();
   const result = await supabase
     .from("public_trips")
@@ -18,7 +19,7 @@ export async function getPublicTrips(): Promise<PublicTripWithUser[]> {
     ...mapPublicTripRow(row),
     traveler: mapProfileRow(row.traveler as Record<string, unknown>),
   }));
-}
+});
 
 export async function createPublicTrip(
   travelerId: string,
@@ -37,12 +38,12 @@ export async function createPublicTrip(
     })
     .select("*")
     .single();
-  return mapPublicTripRow(unwrap(result, { op: "createPublicTrip", args: { travelerId, ...trip } }));
+  return mapPublicTripRow(unwrap(result, { op: "createPublicTrip", args: { travelerId, ...trip }, mutation: true }));
 }
 
 // ── Local events ──────────────────────────────
 
-export async function getLocalEvents(): Promise<LocalEventWithCreator[]> {
+export const getLocalEvents = cache(async (): Promise<LocalEventWithCreator[]> => {
   const supabase = await createClient();
   const result = await supabase
     .from("local_events")
@@ -52,18 +53,19 @@ export async function getLocalEvents(): Promise<LocalEventWithCreator[]> {
     ...mapLocalEventRow(row as never),
     creator: mapProfileRow(row.creator as Record<string, unknown>),
   }));
-}
+});
 
-export async function getLocalEventById(eventId: string): Promise<LocalEventWithCreator | null> {
+export const getLocalEventById = cache(async (eventId: string): Promise<LocalEventWithCreator | null> => {
   const supabase = await createClient();
   const result = await supabase
     .from("local_events")
     .select(`*, creator:profiles!local_events_creator_id_fkey(${PROFILE_COLUMNS}), rsvps:local_event_rsvps(user_id)`)
     .eq("id", eventId)
     .maybeSingle();
-  if (!result.data) return null;
-  return { ...mapLocalEventRow(unwrap(result, { op: "getLocalEventById", args: { eventId } }) as never), creator: mapProfileRow(result.data.creator as Record<string, unknown>) };
-}
+  const row = unwrapMaybe(result, { op: "getLocalEventById", args: { eventId } });
+  if (!row) return null;
+  return { ...mapLocalEventRow(row as never), creator: mapProfileRow(row.creator as Record<string, unknown>) };
+});
 
 export async function createLocalEvent(
   creatorId: string,
@@ -83,7 +85,7 @@ export async function createLocalEvent(
     })
     .select("*")
     .single();
-  const created = mapLocalEventRow(unwrap(result, { op: "createLocalEvent", args: { creatorId, ...event } }) as never);
+  const created = mapLocalEventRow(unwrap(result, { op: "createLocalEvent", args: { creatorId, ...event }, mutation: true }) as never);
 
   // The mock behavior auto-RSVPs the creator. Mirrored here as a second
   // insert rather than a trigger, so the capacity-check trigger (which

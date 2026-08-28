@@ -1,63 +1,157 @@
 /* ──────────────────────────────────────────────
-   Nomads Design System
-   Light theme, clean panels, full control.
+   4dnomads Design System v4 — "NomadStay"
+   Adopted 2026-08-28 from the Stitch design set
+   (project 17502068394573156412), at the user's direction, replacing the v3
+   electric-blue system. Taken from the designs' own Tailwind config rather
+   than eyeballed off screenshots, so these are the exact authored values.
+
+   It is a Material 3 scheme, and the pairing is more specific than "warm":
+   a rust primary (#b22c00) over COOL blue-tinted surfaces (#f7f9ff and the
+   surface-container ramp), navy body text, and warm pinkish-brown outlines.
+   The warm/cool tension between the accent and the ground is the thing that
+   makes it read as designed rather than defaulted -- flattening either side
+   toward the other loses it.
+
+   Everything routes through the semantic tokens further down, so per-page
+   CSS modules pick this up without edits. The legacy --terracotta-* /
+   --charcoal-* / --sand-* names are kept as aliases: they are referenced
+   across ~30 modules, and renaming them buys nothing.
    ────────────────────────────────────────────── */
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@500;600;700&display=swap');
 
 :root {
+  /* ── Material 3 palette, verbatim from the NomadStay Stitch config ── */
+  --m3-primary: #b22c00;
+  --m3-primary-container: #ff5f33;
+  --m3-on-primary: #ffffff;
+  --m3-on-primary-container: #5a1200;
+  --m3-primary-fixed: #ffdbd1;
+  --m3-primary-fixed-dim: #ffb5a1;
+  --m3-on-primary-fixed: #3b0800;
+  --m3-on-primary-fixed-variant: #881f00;
+
+  --m3-secondary: #516071;
+  --m3-secondary-container: #d1e1f5;
+  --m3-on-secondary-container: #556475;
+  --m3-secondary-fixed: #d4e4f8;
+  --m3-secondary-fixed-dim: #b8c8dc;
+  --m3-on-secondary-fixed-variant: #394858;
+
+  --m3-surface: #f7f9ff;
+  --m3-surface-container-lowest: #ffffff;
+  --m3-surface-container-low: #edf4ff;
+  --m3-surface-container: #e7eefe;
+  --m3-surface-container-high: #daeafe;
+  --m3-surface-container-highest: #d4e4f8;
+  --m3-surface-variant: #d4e4f8;
+  --m3-surface-dim: #ccdcf0;
+  --m3-on-surface: #0d1d2b;
+  /* Deliberately a warm brown against the cool surfaces -- this is the
+     scheme's signature contrast, not a mistake to normalise away. */
+  --m3-on-surface-variant: #5a413a;
+  --m3-inverse-surface: #233241;
+  --m3-inverse-on-surface: #e8f1ff;
+
+  --m3-outline: #8f7068;
+  --m3-outline-variant: #e3beb5;
+
+  --m3-error: #ba1a1a;
+  --m3-error-container: #ffdad6;
+  --m3-on-error-container: #93000a;
+  --m3-success: #2e7d32;
+
   /* ── Colors ── */
   --white: #ffffff;
-  --alabaster: #fcfaf7;
-  --sand-50: #f7f4ee;
-  --sand-100: #efeae0;
-  --sand-200: #e5ded0;
-  --sand-300: #d6cbba;
-  
-  --terracotta-50: #fdf6f3;
-  --terracotta-100: #f9e9e2;
-  --terracotta-500: #d96b43;
-  --terracotta-600: #c8552b;
-  --terracotta-700: #a4401e;
+  --alabaster: var(--m3-surface);
+  --sand-50: var(--m3-surface-container-low);
+  --sand-100: var(--m3-surface-container);
+  --sand-200: var(--m3-outline-variant);
+  --sand-300: var(--m3-outline);
 
-  --charcoal-900: #1c1917;
-  --charcoal-800: #292524;
-  --charcoal-600: #57534e;
-  --charcoal-400: #a8a29e;
-  --charcoal-200: #e7e5e4;
+  /* Legacy name, now the M3 primary ramp: rust rather than electric blue. */
+  --terracotta-50: var(--m3-primary-fixed);
+  --terracotta-100: var(--m3-primary-fixed-dim);
+  --terracotta-500: var(--m3-primary);
+  --terracotta-600: var(--m3-on-primary-fixed-variant);
+  --terracotta-700: var(--m3-on-primary-container);
 
-  --olive-50: #f2f7f4;
-  --olive-600: #2d5a44;
+  /* Navy text ramp (M3 on-surface / secondary / inverse-surface). */
+  --charcoal-900: var(--m3-on-surface);
+  --charcoal-800: var(--m3-inverse-surface);
+  --charcoal-600: var(--m3-secondary);
+  --charcoal-400: var(--m3-on-secondary-container);
+  --charcoal-200: var(--m3-secondary-fixed-dim);
+
+  --olive-50: #e8f5e9;
+  --olive-600: var(--m3-success);
+
+  /* Amber maps onto the bright primary-container (#ff5f33) rather than a
+     separate yellow: the NomadStay set has no amber, and a second warm
+     accent alongside the rust primary muddies both. */
+  --amber-50: var(--m3-primary-fixed);
+  --amber-100: var(--m3-primary-fixed-dim);
+  --amber-200: var(--m3-outline-variant);
+  --amber-500: var(--m3-primary-container);
+  --amber-700: var(--m3-on-primary-fixed-variant);
+
+  /* Same undefined-token bug as amber/gray above: red- and green- scales
+     were used for danger/success badges and blocked-date states but never
+     defined. */
+  --red-50: var(--m3-error-container);
+  --red-100: #ffb4ab;
+  --red-500: var(--m3-error);
+  --red-600: var(--m3-on-error-container);
+  --green-100: #c8e6c9;
+  --green-700: var(--m3-success);
+
+  /* Aliases: several component CSS modules (footer, admin, events, messages,
+     profile, request, hosting) reference a --gray-* scale that was never
+     defined, so those declarations silently fell back to transparent/
+     inherited values (e.g. white-on-white CTA text). Mapped onto the real
+     sand/charcoal scale rather than rewriting every call site. */
+  --gray-50: var(--sand-50);
+  --gray-100: var(--sand-100);
+  --gray-400: var(--charcoal-400);
+  --gray-800: var(--charcoal-800);
+  --gray-900: var(--charcoal-900);
 
   /* ── Semantic Tokens ── */
-  --bg-page: var(--alabaster);
-  --bg-card: var(--white);
-  --bg-panel: var(--white);
-  --bg-input: var(--white);
-  --bg-hover: var(--sand-50);
-  --bg-active: var(--terracotta-50);
+  /* The page ground is the cool #f7f9ff surface and cards sit on pure white
+     above it (surface-container-lowest). Making both white would collapse
+     the elevation the whole scheme is built on. */
+  --bg-page: var(--m3-surface);
+  --bg-card: var(--m3-surface-container-lowest);
+  --bg-panel: var(--m3-surface-container-lowest);
+  --bg-input: var(--m3-surface-container-lowest);
+  --bg-hover: var(--m3-surface-container-low);
+  --bg-active: var(--m3-surface-container);
 
-  --text-primary: var(--charcoal-900);
-  --text-secondary: var(--charcoal-600);
-  --text-tertiary: var(--charcoal-400);
-  --text-inverse: var(--white);
+  --text-primary: var(--m3-on-surface);
+  --text-secondary: var(--m3-secondary);
+  --text-tertiary: var(--m3-on-secondary-container);
+  --text-inverse: var(--m3-on-primary);
 
-  --primary: var(--terracotta-500);
-  --primary-hover: var(--terracotta-600);
-  --primary-light: var(--terracotta-50);
+  --primary: var(--m3-primary);
+  --primary-hover: var(--m3-on-primary-fixed-variant);
+  --primary-light: var(--m3-primary-fixed);
 
-  --secondary-btn: var(--charcoal-900);
-  --secondary-btn-hover: var(--charcoal-800);
+  --secondary-btn: var(--m3-inverse-surface);
+  --secondary-btn-hover: var(--m3-on-surface);
 
-  --success: var(--olive-600);
+  --success: var(--m3-success);
   --success-light: var(--olive-50);
-  --error: #dc2626;
-  --error-light: #fef2f2;
-  --info: #2563eb;
-  --info-light: #eff6ff;
+  --error: var(--m3-error);
+  --error-light: var(--m3-error-container);
+  --info: var(--m3-secondary);
+  --info-light: var(--m3-secondary-container);
+  /* Referenced as var(--color-danger, #d33) by every inline form-error across
+     ~10 screens but never defined, so all of them rendered in that off-palette
+     fallback red instead of the scheme's error colour. */
+  --color-danger: var(--m3-error);
 
-  --border: #e8e2d8;
-  --border-light: #f3efe6;
+  --border: var(--sand-200);
+  --border-light: var(--sand-100);
   --border-focus: var(--terracotta-500);
 
   /* ── Spacing ── */
@@ -73,35 +167,45 @@
   --space-16: 64px;
   --space-20: 80px;
 
-  /* ── Typography ── */
-  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-serif: 'Playfair Display', Georgia, serif;
+  /* ── Typography ──
+     Inter for body, Lexend for headings -- the pairing the designs specify.
+     --font-serif keeps its name (referenced by every heading across ~25 CSS
+     modules) and now points at Lexend. */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-serif: 'Lexend', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-family: var(--font-sans);
-  
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
-  --font-size-2xl: 1.5rem;
-  --font-size-3xl: 1.875rem;
-  --font-size-4xl: 2.5rem;
-  --font-size-5xl: 3.5rem;
 
-  /* ── Radii ── */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
-  --radius-2xl: 32px;
+  /* Sizes are the designs' own type scale, converted from px:
+     body-sm 14 / body-md 16 / body-lg 18 / headline-sm 20 / headline-md 24 /
+     headline-lg-mobile 28 / headline-lg 32 / headline-xl 40. */
+  --font-size-xs: 0.75rem;   /* 12 - label-sm */
+  --font-size-sm: 0.875rem;  /* 14 - body-sm / label-md */
+  --font-size-base: 1rem;    /* 16 - body-md */
+  --font-size-lg: 1.125rem;  /* 18 - body-lg */
+  --font-size-xl: 1.25rem;   /* 20 - headline-sm */
+  --font-size-2xl: 1.5rem;   /* 24 - headline-md */
+  --font-size-3xl: 1.75rem;  /* 28 - headline-lg-mobile */
+  --font-size-4xl: 2rem;     /* 32 - headline-lg */
+  --font-size-5xl: 2.5rem;   /* 40 - headline-xl */
+
+  /* ── Radii ──
+     Materially tighter than v3: the designs use 4 / 8 / 12px, so the old
+     16-32px "pill" radii would round every card far past what they show. */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
   --radius-full: 9999px;
 
-  /* ── Shadows ── */
-  --shadow-xs: 0 1px 2px rgba(45, 30, 15, 0.03);
-  --shadow-sm: 0 2px 6px rgba(45, 30, 15, 0.04), 0 1px 2px rgba(45, 30, 15, 0.03);
-  --shadow-md: 0 8px 18px rgba(45, 30, 15, 0.06), 0 2px 4px rgba(45, 30, 15, 0.04);
-  --shadow-lg: 0 16px 32px -4px rgba(45, 30, 15, 0.08), 0 4px 12px -2px rgba(45, 30, 15, 0.04);
-  --shadow-xl: 0 24px 48px -6px rgba(45, 30, 15, 0.1);
+  /* ── Shadows ──
+     Navy-tinted, matching the designs' own ambient-shadow-low/high and CTA
+     shadows. A neutral gray shadow over the cool #f7f9ff ground reads muddy. */
+  --shadow-xs: 0 1px 2px rgba(21, 28, 39, 0.03);
+  --shadow-sm: 0 4px 12px rgba(21, 28, 39, 0.04);
+  --shadow-md: 0 4px 12px rgba(13, 29, 43, 0.08);
+  --shadow-lg: 0 12px 32px rgba(21, 28, 39, 0.08);
+  --shadow-xl: 0 8px 16px rgba(13, 29, 43, 0.15);
 
   /* ── Transitions ── */
   --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -127,6 +231,7 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
+  background-color: var(--bg-page);
 }
 
 body {
@@ -136,22 +241,98 @@ body {
   color: var(--text-primary);
   background-color: var(--bg-page);
   min-height: 100vh;
+  /* Chrome's pull-to-refresh reloads the whole page when you overscroll past
+     the top -- feeling exactly like refreshing a website. A packaged app has
+     no such gesture, so this app doesn't either. */
+  overscroll-behavior-y: none;
+  /* Same-color html/body means an iOS rubber-band bounce past the edge
+     reveals more of our own background instead of flashing default white. */
+}
+
+/* ── Native-app touch feel ──
+   None of this is decoration -- each rule removes one specific "this is a
+   browser tab" tell that a packaged Capacitor app (or any mobile web view)
+   otherwise carries by default. */
+
+a, button, .btn, .tab, .chip {
+  /* The grey/blue flash Android and iOS Safari paint on every tap unless
+     told not to. Left on, it is the single most obvious "this is a website"
+     signal on mobile -- every native app suppresses it. */
+  -webkit-tap-highlight-color: transparent;
+  /* Removes the ~300ms tap delay some engines still apply while waiting to
+     see if a tap is the start of a double-tap-to-zoom gesture. */
+  touch-action: manipulation;
+}
+
+/* Selecting UI chrome (a nav label, a button, a tab) and getting the native
+   text-selection handles/magnifier is a browser behavior; a native app only
+   lets you select actual content. Scoped to interactive chrome only -- an
+   event title, a profile name, a bio are real content and stay selectable. */
+button, .btn, .tab, nav, .navbar {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Avatars are an identity glyph, not content -- a long-press "Save Image"
+   callout on one reads as a web page, not a profile photo. */
+.avatar img {
+  -webkit-touch-callout: none;
+}
+
+::selection {
+  background: var(--m3-primary-fixed);
+  color: var(--m3-on-primary-fixed-variant);
+}
+
+/* Shared with MobileTabBar (mobile-tab-bar.module.css) so the fixed bottom
+   bar's height only has to change in one place. */
+:root {
+  --mobile-tab-bar-height: 56px;
+  /* AppBar (top-level screens) and MobileHeader (pushed screens) are both
+     this tall; layouts that do their own height math subtract it. */
+  --app-bar-height: 56px;
+}
+
+@media (max-width: 768px) {
+  .mobile-bottom-spacer {
+    padding-bottom: calc(var(--mobile-tab-bar-height) + env(safe-area-inset-bottom, 0px));
+  }
+  /* For desktop-only affordances (secondary text links, etc.) superseded
+     by mobile-native equivalents -- e.g. MobileHeader's back arrow instead
+     of a "← Back to X" text link. */
+  .desktop-only {
+    display: none !important;
+  }
 }
 
 /* ──────────────────────────────────────────────
    Typography
    ────────────────────────────────────────────── */
 
+/* Lexend at the designs' weights. 800 was a v3 choice; the NomadStay set
+   tops out at 700 for the largest headline and uses 600 everywhere below,
+   with tracking that loosens as size drops (-0.02em at 40px, 0 by 24px). */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-serif);
   font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: -0.015em;
+  line-height: 1.25;
+  letter-spacing: 0;
   color: var(--text-primary);
 }
 
-h1 { font-size: var(--font-size-4xl); }
-h2 { font-size: var(--font-size-2xl); }
+h1 {
+  font-size: var(--font-size-5xl);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+h2 {
+  font-size: var(--font-size-4xl);
+  letter-spacing: -0.01em;
+}
+/* headline-sm (20px) rather than headline-md: h3 is used for panel and
+   settings-row titles throughout the app, where 24px reads as a page
+   heading competing with the screen's actual h1/h2. */
 h3 { font-size: var(--font-size-xl); }
 h4 { font-size: var(--font-size-lg); }
 
@@ -172,7 +353,13 @@ a {
   background: var(--bg-panel);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-xs);
+  /* Ambient drop shadow plus a warm one-pixel top edge, catching light the
+     way a physical card would. A plain white inset highlight is invisible
+     against --bg-panel (also white), so this borrows the primary-fixed hue
+     instead -- which also plays into the scheme's own warm/cool tension
+     rather than fighting it. Kept subtle: this is a Material 3 surface,
+     not a glass panel. */
+  box-shadow: var(--shadow-xs), inset 0 1px 0 rgba(255, 219, 209, 0.7);
 }
 
 .panel-padded {
@@ -219,7 +406,9 @@ a {
   font-weight: 600;
   line-height: 1;
   border: 1px solid transparent;
-  border-radius: var(--radius-md);
+  /* Pills, per the designs -- every CTA in the NomadStay set is
+     rounded-full, which is the most recognisable shape cue in the system. */
+  border-radius: var(--radius-full);
   cursor: pointer;
   transition: all var(--transition-fast);
   white-space: nowrap;
@@ -243,6 +432,10 @@ a {
 .btn-primary:hover:not(:disabled) {
   background: var(--primary-hover);
   border-color: var(--primary-hover);
+  /* A flat colour swap alone reads as static; the lift is what makes the
+     hover feel like the button responding rather than just recolouring. */
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .btn-secondary {
@@ -279,7 +472,7 @@ a {
 }
 
 .btn-sm { padding: 6px 12px; font-size: var(--font-size-xs); }
-.btn-lg { padding: 14px 28px; font-size: var(--font-size-base); }
+.btn-lg { min-height: 56px; padding: 0 28px; font-size: var(--font-size-sm); letter-spacing: 0.02em; box-shadow: var(--shadow-md); }
 .btn-full { width: 100%; }
 
 /* ──────────────────────────────────────────────
@@ -290,6 +483,19 @@ a {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+}
+
+/* Shared 2-up form row (e.g. first/last name, guests/arrangement). Several
+   pages hand-rolled this as an inline style with no mobile fallback, which
+   let two-column inputs overflow the page on narrow viewports since a
+   grid item's default min-width:auto doesn't shrink for its content. */
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+@media (max-width: 480px) {
+  .form-row-2 { grid-template-columns: 1fr; }
 }
 
 .form-label {
@@ -303,7 +509,10 @@ a {
 .form-select {
   padding: 10px 14px;
   font-family: var(--font-family);
-  font-size: var(--font-size-sm);
+  /* Must stay >=16px: iOS Safari/WKWebView auto-zooms the page when a
+     focused control's text is smaller, which is the single most
+     website-feeling behaviour in a packaged web-view app. */
+  font-size: var(--font-size-base);
   color: var(--text-primary);
   background: var(--bg-input);
   border: 1px solid var(--border);
@@ -316,7 +525,9 @@ a {
 .form-select:focus {
   outline: none;
   border-color: var(--border-focus);
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+  /* Was a hardcoded amber rgba() left over from the v1 palette, so every
+     form in the app still focus-ringed in the old brand colour. */
+  box-shadow: 0 0 0 3px rgba(178, 44, 0, 0.18);
 }
 
 .form-input::placeholder,
@@ -389,8 +600,11 @@ a {
   justify-content: center;
   border-radius: var(--radius-full);
   font-weight: 600;
-  color: var(--amber-700);
-  background: var(--amber-100);
+  /* Amber here was another v1-palette leftover: every initials avatar in the
+     app rendered cream-on-brown, which read as a different product to the
+     blue everything around it. */
+  color: var(--terracotta-700);
+  background: var(--terracotta-100);
   flex-shrink: 0;
   position: relative;
 }
@@ -408,9 +622,15 @@ a {
 .text-secondary { color: var(--text-secondary); }
 .text-sm { font-size: var(--font-size-sm); }
 .text-xs { font-size: var(--font-size-xs); }
+/* text-lg, text-xl and font-bold were used across several screens but never
+   defined, so those elements silently inherited the body size and weight.
+   Same class of bug as the undefined gray and amber variables. */
+.text-lg { font-size: var(--font-size-lg); }
+.text-xl { font-size: var(--font-size-xl); }
 .text-center { text-align: center; }
 .font-medium { font-weight: 500; }
 .font-semibold { font-weight: 600; }
+.font-bold { font-weight: 700; }
 
 .flex { display: flex; }
 .flex-col { flex-direction: column; }
@@ -420,6 +640,27 @@ a {
 .gap-2 { gap: var(--space-2); }
 .gap-3 { gap: var(--space-3); }
 .gap-4 { gap: var(--space-4); }
+/* Missing .gap-5 collapsed the whole hosting form to zero spacing -- its
+   container is `flex flex-col gap-5`. */
+.gap-5 { gap: var(--space-5); }
+
+/* A label/action row that is side-by-side with room and stacked without it.
+   `flex items-center justify-between` alone squeezes the text into whatever
+   the button leaves behind, which on a phone means a heading breaking every
+   two words. */
+.row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+@media (max-width: 640px) {
+  .row-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-3);
+  }
+}
 .gap-6 { gap: var(--space-6); }
 .gap-8 { gap: var(--space-8); }
 
@@ -490,33 +731,133 @@ a {
 .panel-hover:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
-  border-color: var(--amber-200);
+  border-color: var(--sand-300);
 }
 
 .btn:active:not(:disabled) {
   transform: scale(0.98);
 }
 
-@keyframes pulseGlow {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.85; transform: scale(1.05); }
+/* ──────────────────────────────────────────────
+   Shared loading / empty state primitives
+   Used by every route's loading.tsx and by empty-state fallbacks
+   that don't need bespoke copy (see decision 9, docs/cutover-plan.md).
+   ────────────────────────────────────────────── */
+
+@keyframes skeletonShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
-.pulse-badge {
-  animation: pulseGlow 2.5s infinite ease-in-out;
+.skeleton {
+  background: linear-gradient(90deg, var(--sand-100) 25%, var(--sand-50) 37%, var(--sand-100) 63%);
+  background-size: 400% 100%;
+  animation: skeletonShimmer 1.6s ease-in-out infinite;
+  border-radius: var(--radius-md);
 }
 
-.free-banner {
-  background: linear-gradient(135deg, var(--amber-500), #d97706);
-  color: var(--white);
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--font-size-xs);
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+.skeleton-text {
+  height: 0.9em;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-2);
+}
+
+.skeleton-avatar {
   border-radius: var(--radius-full);
-  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-5);
+}
+
+.skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: var(--space-2);
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+  color: var(--text-secondary);
+}
+
+.empty-state-icon {
+  color: var(--terracotta-500);
+  margin-bottom: var(--space-4);
+  opacity: 0.8;
+}
+
+.empty-state h3 {
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.empty-state p {
+  max-width: 420px;
+}
+
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.error-state-icon {
+  display: flex;
+  justify-content: center;
+  color: var(--error);
+  margin-bottom: var(--space-4);
+}
+
+/* ──────────────────────────────────────────────
+   Motion language
+   Used by <Reveal> (src/components/Reveal.tsx) and directly on cards/links
+   that want a physical press response. Every animation here is motivated:
+   reveal = content arriving as you scroll (storytelling), the tilt/press
+   states = feedback that a tap registered. Nothing loops forever "because
+   it looked cool" (design pass, 2026-08-27).
+   ────────────────────────────────────────────── */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  filter: blur(6px);
+  transition: opacity 600ms cubic-bezier(0.16, 1, 0.3, 1), transform 600ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* A slightly stronger press-down than the default .btn:active, for large
+   tap targets that should feel more physical (quick-action cards, host
+   cards) -- see HomeApp.module additions and ExploreClient cards. */
+.press-card {
+  transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.press-card:active {
+  transform: scale(0.97);
 }
 

@@ -2,21 +2,35 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { loginAction, type AuthFormState } from "@/lib/actions/auth";
+import { MobileHeader } from "@/components/MobileHeader";
+import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 import styles from "./auth.module.css";
 
 const initialState: AuthFormState = {};
 
 export default function LoginPage() {
   const [state, formAction, pending] = useActionState(loginAction, initialState);
+  // /auth/callback redirects here with ?error=... when a provider sign-in
+  // fails; without surfacing it the user is bounced back to a blank form
+  // with no idea why.
+  const callbackError = useSearchParams().get("error");
+  const error = state.error ?? callbackError;
 
   return (
-    <div className={styles.page}>
+    <>
+      <MobileHeader title="Log In" backHref="/" />
+      <div className={styles.page}>
       <div className={`panel panel-padded ${styles.card}`}>
         <h1 className={styles.title}>Welcome Back</h1>
         <p className="text-secondary text-sm text-center" style={{ marginBottom: 24 }}>
           Log in to continue your journey.
         </p>
+
+        <GoogleSignInButton label="Continue with Google" />
+
+        <div className={styles.divider}>or</div>
 
         <form className={styles.form} action={formAction}>
           <div className="form-group">
@@ -29,9 +43,9 @@ export default function LoginPage() {
             <input type="password" id="password" name="password" className="form-input" placeholder="••••••••" maxLength={200} required />
           </div>
 
-          {state.error && (
+          {error && (
             <p role="alert" className="text-sm" style={{ color: "var(--color-danger, #d33)" }}>
-              {state.error}
+              {error}
             </p>
           )}
 
@@ -44,6 +58,7 @@ export default function LoginPage() {
           Don&apos;t have an account? <Link href="/register" className={styles.link}>Sign up</Link>
         </p>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

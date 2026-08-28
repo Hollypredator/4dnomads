@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireModerator } from "@/lib/session";
 import { resolveReport } from "@/lib/data/moderation";
-import { AppError } from "@/lib/errors";
+import { runAction } from "@/lib/errors";
 
 /**
  * requireModerator() redirects a non-moderator away before this ever runs
@@ -14,12 +14,10 @@ import { AppError } from "@/lib/errors";
  */
 export async function resolveReportAction(reportId: string, action: string) {
   await requireModerator();
-  try {
+
+  const result = await runAction(async () => {
     await resolveReport(reportId, action);
     revalidatePath("/admin");
-    return { ok: true as const };
-  } catch (err) {
-    if (err instanceof AppError) return { ok: false as const, error: err.message };
-    throw err;
-  }
+  });
+  return result.ok ? { ok: true as const } : result;
 }

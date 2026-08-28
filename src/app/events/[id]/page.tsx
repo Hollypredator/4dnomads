@@ -1,12 +1,26 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { formatEventTime } from "@/lib/format";
+import { Avatar } from "@/components/Avatar";
 import { notFound } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getLocalEventById } from "@/lib/data/community";
 import { getMessagesForEventGroup } from "@/lib/data/messages";
-import { createClient } from "@/utils/supabase/server";
-import { mapProfileRow } from "@/lib/data/mappers";
+import { getAttendeeProfiles } from "@/lib/data/profiles";
 import { RsvpButton, EventChat } from "./EventDetailClient";
+import { MobileHeader } from "@/components/MobileHeader";
+import { MapPinIcon } from "@/components/Icons";
 import styles from "./event-detail.module.css";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const event = await getLocalEventById(id);
+  if (!event) return { title: "Hangout not found" };
+  return {
+    title: event.title,
+    description: `${event.eventDate} at ${formatEventTime(event.eventTime)} in ${event.locationName}. ${event.description.slice(0, 120)}`,
+  };
+}
 
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -21,21 +35,23 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   // non-attendee simply gets an empty thread rather than an error.
   const messages = isAttending ? await getMessagesForEventGroup(id) : [];
 
-  const supabase = await createClient();
-  const attendeesResult = event.rsvps.length > 0 ? await supabase.from("profiles").select("*").in("id", event.rsvps) : { data: [] };
-  const attendees = (attendeesResult.data ?? []).map(mapProfileRow);
+  const attendees = await getAttendeeProfiles(event.rsvps);
 
   return (
-    <div className={styles.page}>
+    <>
+      <MobileHeader title={event.title} backHref="/events" />
+      <div className={styles.page}>
       <div className={styles.layout}>
         <div className={styles.main}>
           <div className="panel panel-padded flex flex-col gap-4">
             <div className={styles.header}>
               <span className="badge badge-info">
-                {event.eventDate} @ {event.eventTime}
+                {event.eventDate} @ {formatEventTime(event.eventTime)}
               </span>
               <h1>{event.title}</h1>
-              <p className="text-secondary">📍 {event.locationName}</p>
+              <p className="text-secondary" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                <MapPinIcon size={14} /> {event.locationName}
+              </p>
             </div>
 
             <p className={styles.desc}>{event.description}</p>
@@ -55,10 +71,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             <div className={styles.attendeesList}>
               {attendees.map((u) => (
                 <Link href={`/profile/${u.id}`} key={u.id} className={styles.attendee}>
-                  <div className="avatar avatar-md">
-                    {u.firstName[0]}
-                    {u.lastName[0]}
-                  </div>
+                  <Avatar src={u.avatarUrl} firstName={u.firstName} lastName={u.lastName} size="md" />
                   <span className="text-sm font-medium">{u.firstName}</span>
                 </Link>
               ))}
@@ -75,6 +88,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
           </div>
         </aside>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

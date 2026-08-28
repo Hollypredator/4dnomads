@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Avatar } from "@/components/Avatar";
 import Link from "next/link";
 import { updateStayRequestStatusAction } from "@/lib/actions/requests";
+import { Reveal } from "@/components/Reveal";
 import { CalendarIcon, MessageIcon, ShieldCheckIcon } from "@/components/Icons";
 import type { RequestStatus, StayRequestWithUsers } from "@/types";
 import styles from "./dashboard.module.css";
@@ -60,16 +62,16 @@ export default function DashboardClient({
 
       {requests.length > 0 ? (
         <div className={styles.list}>
-          {requests.map((req) => {
+          {requests.map((req, i) => {
             const otherUser = activeTab === "incoming" ? req.traveler : req.host;
-            const initials = `${otherUser.firstName[0]}${otherUser.lastName[0]}`;
             const nights = Math.ceil((new Date(req.departureDate).getTime() - new Date(req.arrivalDate).getTime()) / 86400000);
 
             return (
-              <div key={req.id} className={`panel panel-hover ${styles.requestCard}`}>
+              <Reveal key={req.id} delay={Math.min(i, 6) * 50}>
+              <div className={`panel panel-hover press-card ${styles.requestCard}`}>
                 <div className={styles.requestInfo}>
-                  <Link href={`/profile/${otherUser.id}`} className="avatar avatar-lg">
-                    {initials}
+                  <Link href={`/profile/${otherUser.id}`}>
+                    <Avatar src={otherUser.avatarUrl} firstName={otherUser.firstName} lastName={otherUser.lastName} size="lg" />
                   </Link>
                   <div className={styles.requestDetails}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -114,6 +116,7 @@ export default function DashboardClient({
                   </Link>
                 </div>
               </div>
+              </Reveal>
             );
           })}
         </div>

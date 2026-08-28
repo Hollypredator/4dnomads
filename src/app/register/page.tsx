@@ -3,6 +3,8 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { registerAction, type AuthFormState } from "@/lib/actions/auth";
+import { MobileHeader } from "@/components/MobileHeader";
+import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 import styles from "../login/auth.module.css";
 
 const initialState: AuthFormState = {};
@@ -11,15 +13,21 @@ export default function RegisterPage() {
   const [state, formAction, pending] = useActionState(registerAction, initialState);
 
   return (
-    <div className={styles.page}>
+    <>
+      <MobileHeader title="Sign Up" backHref="/" />
+      <div className={styles.page}>
       <div className={`panel panel-padded ${styles.card}`}>
-        <h1 className={styles.title}>Join Nomads</h1>
+        <h1 className={styles.title}>Join 4dnomads</h1>
         <p className="text-secondary text-sm text-center" style={{ marginBottom: 24 }}>
           Create your free account and start exploring.
         </p>
 
+        <GoogleSignInButton label="Sign up with Google" />
+
+        <div className={styles.divider}>or</div>
+
         <form className={styles.form} action={formAction}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div className="form-row-2">
             <div className="form-group">
               <label className="form-label" htmlFor="firstName">First Name</label>
               <input type="text" id="firstName" name="firstName" className="form-input" placeholder="Jane" maxLength={80} required />
@@ -56,6 +64,7 @@ export default function RegisterPage() {
           Already have an account? <Link href="/login" className={styles.link}>Log in</Link>
         </p>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

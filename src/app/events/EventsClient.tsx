@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { formatEventTime } from "@/lib/format";
+import { Avatar } from "@/components/Avatar";
 import Link from "next/link";
 import { SearchIcon, MapPinIcon, CalendarIcon, UserIcon } from "@/components/Icons";
+import { Reveal } from "@/components/Reveal";
 import type { LocalEventWithCreator } from "@/types";
 import styles from "./events.module.css";
 
@@ -32,16 +35,16 @@ export default function EventsClient({ events }: { events: LocalEventWithCreator
 
       {filteredEvents.length > 0 ? (
         <div className={styles.grid}>
-          {filteredEvents.map((event) => {
-            const initials = `${event.creator.firstName[0]}${event.creator.lastName[0]}`;
+          {filteredEvents.map((event, i) => {
             return (
-              <div key={event.id} className={`panel panel-hover ${styles.eventCard}`}>
+              <Reveal key={event.id} delay={Math.min(i, 6) * 50}>
+              <div className={`panel panel-hover press-card ${styles.eventCard}`}>
                 <div className={styles.cardHeader}>
                   <span className={styles.dateLabel} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
                     <CalendarIcon size={14} />
                     {new Date(event.eventDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
                   </span>
-                  <span className="badge badge-info">{event.eventTime}</span>
+                  <span className="badge badge-info">{formatEventTime(event.eventTime)}</span>
                 </div>
 
                 <div className={styles.cardBody}>
@@ -54,7 +57,7 @@ export default function EventsClient({ events }: { events: LocalEventWithCreator
 
                 <div className={styles.cardFooter}>
                   <div className={styles.attendees}>
-                    <div className="avatar avatar-sm">{initials}</div>
+                    <Avatar src={event.creator.avatarUrl} firstName={event.creator.firstName} lastName={event.creator.lastName} size="sm" />
                     <span className="text-secondary text-xs" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
                       <UserIcon size={12} /> {event.rsvps.length} attending · by {event.creator.firstName}
                     </span>
@@ -65,6 +68,7 @@ export default function EventsClient({ events }: { events: LocalEventWithCreator
                   </Link>
                 </div>
               </div>
+              </Reveal>
             );
           })}
         </div>

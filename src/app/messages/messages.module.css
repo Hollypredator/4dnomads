@@ -1,5 +1,19 @@
 .page { height: calc(100vh - 61px); } /* navbar height */
 
+@media (max-width: 768px) {
+  /* The bottom tab bar (MobileTabBar) also eats into the viewport here --
+     without this, the chat input sits underneath the fixed tab bar. The
+     negative margin cancels out <main>'s .mobile-bottom-spacer padding
+     (globals.css), which this page doesn't need on top of its own height
+     calc -- without it the two reservations would stack. */
+  .page {
+    /* AppBar, not the 61px desktop navbar: that is display:none below 769px,
+       so subtracting it here left a 61px dead strip above the tab bar. */
+    height: calc(100vh - var(--app-bar-height) - var(--mobile-tab-bar-height) - env(safe-area-inset-bottom, 0px));
+    margin-bottom: calc(-1 * (var(--mobile-tab-bar-height) + env(safe-area-inset-bottom, 0px)));
+  }
+}
+
 .layout { display: grid; grid-template-columns: 360px 1fr; height: 100%; }
 
 /* Sidebar */
@@ -16,7 +30,7 @@
   font-family: var(--font-family);
 }
 .threadItem:hover { background: var(--bg-hover); }
-.threadActive { background: var(--amber-50); border-left: 3px solid var(--primary); }
+.threadActive { background: var(--terracotta-50); border-left: 3px solid var(--primary); }
 
 .threadInfo { flex: 1; min-width: 0; }
 .threadTop { display: flex; justify-content: space-between; margin-bottom: 2px; }
@@ -55,7 +69,23 @@
 
 .emptyChatState { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
 
+.backButton {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-2);
+  margin-right: var(--space-1);
+  color: var(--text-primary);
+}
+
 @media (max-width: 768px) {
   .layout { grid-template-columns: 1fr; }
-  .sidebar { display: none; }
+  /* Single-pane on mobile: MessagesClient toggles .mobileHidden on whichever
+     pane isn't active (thread list vs. open chat), since which one shows is
+     state, not a fixed breakpoint decision. Was `.sidebar { display: none }`
+     unconditionally, which meant a phone user could never reach the thread
+     list at all -- messaging was unreachable on mobile. */
+  .mobileHidden { display: none; }
+  .backButton { display: inline-flex; }
 }

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/utils/supabase/server";
 import { unwrap, unwrapList, AppError } from "@/lib/errors";
 import { mapProfileRow } from "@/lib/data/mappers";
@@ -7,7 +8,7 @@ const PROFILE_COLUMNS =
   "id, first_name, last_name, email, avatar_url, bio, languages, interests, is_verified, is_banned, created_at";
 
 /** Gated by the "reporters view own; moderators view all" SELECT policy -- a non-moderator caller simply gets their own reports back, never a 403. */
-export async function getReportsWithUsers(): Promise<UserReportWithUsers[]> {
+export const getReportsWithUsers = cache(async (): Promise<UserReportWithUsers[]> => {
   const supabase = await createClient();
   const result = await supabase
     .from("user_reports")
@@ -25,7 +26,7 @@ export async function getReportsWithUsers(): Promise<UserReportWithUsers[]> {
     reporter: mapProfileRow(row.reporter as Record<string, unknown>),
     target: mapProfileRow(row.target as Record<string, unknown>),
   }));
-}
+});
 
 /**
  * Replaces mock-data.ts resolveReport(). The database function checks
@@ -48,7 +49,7 @@ export async function resolveReport(reportId: string, action: string) {
  * Stripe Identity webhook) -- there is no "moderator manually verifies a
  * user" button anymore, on purpose. See decision 5, docs/cutover-plan.md.
  */
-export async function getPlatformStats() {
+export const getPlatformStats = cache(async () => {
   const supabase = await createClient();
 
   const [profiles, homes, requests, reviews, messages, reports] = await Promise.all([
@@ -74,4 +75,4 @@ export async function getPlatformStats() {
     totalMessages: messages.count ?? 0,
     activeReports: reportRows.filter((r) => r.status === "pending").length,
   };
-}
+});

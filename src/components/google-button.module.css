@@ -1,0 +1,37 @@
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  width: 100%;
+  /* 48px: comfortably above the 44px minimum tap target, and matches the
+     height of .btn-lg so it sits level with the primary submit button. */
+  min-height: 48px;
+  padding: 0 var(--space-4);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.button:hover {
+  background: var(--bg-hover);
+  border-color: var(--sand-300);
+}
+
+.button:active {
+  /* Matches the .press-card feedback used across the app so a tap here reads
+     the same as a tap anywhere else in the mobile shell. */
+  transform: scale(0.99);
+}
+
+.button:focus-visible {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(178, 44, 0, 0.18);
+}

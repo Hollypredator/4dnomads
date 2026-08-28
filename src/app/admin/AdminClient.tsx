@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Avatar } from "@/components/Avatar";
 import Link from "next/link";
 import { resolveReportAction } from "@/lib/actions/moderation";
+import { UsersIcon, ShieldCheckIcon, HouseIcon, MailIcon, ClockIcon, AlertIcon, StarIcon, CheckIcon } from "@/components/Icons";
 import type { User, Home, StayRequest, Review, UserReportWithUsers } from "@/types";
 import styles from "./admin.module.css";
 
@@ -71,8 +73,8 @@ export default function AdminClient({
       </header>
 
       {successMessage && (
-        <div className="badge badge-accepted btn-full" style={{ padding: 12, marginBottom: 24, fontSize: 14 }}>
-          ✓ {successMessage}
+        <div className="badge badge-accepted btn-full" style={{ padding: 12, marginBottom: 24, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
+          <CheckIcon size={16} /> {successMessage}
         </div>
       )}
 
@@ -88,32 +90,32 @@ export default function AdminClient({
       {activeTab === "overview" && (
         <div className={styles.statsGrid}>
           <div className={`panel panel-padded ${styles.statCard}`}>
-            <span className={styles.statIcon}>👥</span>
+            <span className={styles.statIcon}><UsersIcon size={24} /></span>
             <div className={styles.statValue}>{stats.totalUsers}</div>
             <div className={styles.statLabel}>Total Users</div>
           </div>
           <div className={`panel panel-padded ${styles.statCard}`}>
-            <span className={styles.statIcon}>✓</span>
+            <span className={styles.statIcon}><ShieldCheckIcon size={24} /></span>
             <div className={styles.statValue}>{stats.verifiedUsers}</div>
             <div className={styles.statLabel}>Verified (KYC)</div>
           </div>
           <div className={`panel panel-padded ${styles.statCard}`}>
-            <span className={styles.statIcon}>🏠</span>
+            <span className={styles.statIcon}><HouseIcon size={24} /></span>
             <div className={styles.statValue}>{stats.totalHomes}</div>
             <div className={styles.statLabel}>Listings</div>
           </div>
           <div className={`panel panel-padded ${styles.statCard}`}>
-            <span className={styles.statIcon}>📩</span>
+            <span className={styles.statIcon}><MailIcon size={24} /></span>
             <div className={styles.statValue}>{stats.totalRequests}</div>
             <div className={styles.statLabel}>Requests</div>
           </div>
           <div className={`panel panel-padded ${styles.statCard}`}>
-            <span className={styles.statIcon}>⏳</span>
+            <span className={styles.statIcon}><ClockIcon size={24} /></span>
             <div className={styles.statValue}>{stats.pendingRequests}</div>
             <div className={styles.statLabel}>Pending Requests</div>
           </div>
           <div className={`panel panel-padded ${styles.statCard} ${stats.activeReports > 0 ? styles.alertCard : ""}`}>
-            <span className={styles.statIcon}>🚨</span>
+            <span className={styles.statIcon}><AlertIcon size={24} /></span>
             <div className={styles.statValue}>{stats.activeReports}</div>
             <div className={styles.statLabel}>Pending Reports</div>
           </div>
@@ -143,10 +145,7 @@ export default function AdminClient({
                   <tr key={user.id} className={user.isBanned ? styles.bannedRow : ""}>
                     <td>
                       <div className={styles.userCell}>
-                        <div className="avatar avatar-sm">
-                          {user.firstName[0]}
-                          {user.lastName[0]}
-                        </div>
+                        <Avatar src={user.avatarUrl} firstName={user.firstName} lastName={user.lastName} size="sm" />
                         <span className="font-medium">
                           {user.firstName} {user.lastName}
                         </span>
@@ -299,7 +298,7 @@ export default function AdminClient({
                           {target?.firstName} {target?.lastName}
                         </Link>
                       </td>
-                      <td>{"⭐".repeat(review.rating)}</td>
+                      <td style={{ display: "flex", gap: 2 }}>{Array.from({ length: review.rating }, (_, i) => <StarIcon key={i} size={14} fill="var(--primary)" />)}</td>
                       <td className="text-sm text-secondary">{review.text.slice(0, 80)}…</td>
                       <td className="text-secondary text-sm">{new Date(review.createdAt).toLocaleDateString()}</td>
                     </tr>

@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { requireSession } from "@/lib/session";
 import { createStayRequest, updateStayRequestStatus, type CreateStayRequestInput, type StayRequestAction } from "@/lib/data/requests";
-import { AppError } from "@/lib/errors";
+import { notifyRequestDecision } from "@/lib/push/notify";
+import { runAction } from "@/lib/errors";
 
 export async function createStayRequestAction(input: CreateStayRequestInput) {
   // Decision 2: the traveler is ALWAYS the session's own id, never a value
@@ -12,25 +14,40 @@ export async function createStayRequestAction(input: CreateStayRequestInput) {
   // vulnerability flagged as threat 7 in docs/cutover-plan.md.
   const session = await requireSession();
 
-  try {
+  const result = await runAction(async () => {
     const request = await createStayRequest(session.authUserId, input);
     revalidatePath("/dashboard");
-    return { ok: true as const, request };
-  } catch (err) {
-    if (err instanceof AppError) return { ok: false as const, error: err.message };
-    throw err;
-  }
+    return request;
+  });
+  return result.ok ? { ok: true as const, request: result.data } : result;
 }
 
 export async function updateStayRequestStatusAction(requestId: string, action: StayRequestAction) {
-  await requireSession(); // caller identity re-derived; the DB trigger checks whether THIS caller may make THIS transition
-  try {
+  const session = await requireSession(); // caller identity re-derived; the DB trigger checks whether THIS caller may make THIS transition
+
+  const result = await runAction(async () => {
     const request = await updateStayRequestStatus(requestId, action);
+
+    // Only the host's accept/decline is worth waking a phone for; the other
+    // transitions (cancel, complete) are initiated by the person who would
+    // be notified.
+    if (action === "accept" || action === "decline") {
+      after(async () => {
+        try {
+          await notifyRequestDecision({
+            travelerId: request.travelerId,
+            hostFirstName: session.profile.firstName,
+            accepted: action === "accept",
+          });
+        } catch (err) {
+          console.error("[push] request-decision notification failed", err);
+        }
+      });
+    }
+
     revalidatePath("/dashboard");
     revalidatePath("/messages");
-    return { ok: true as const, request };
-  } catch (err) {
-    if (err instanceof AppError) return { ok: false as const, error: err.message };
-    throw err;
-  }
+    return request;
+  });
+  return result.ok ? { ok: true as const, request: result.data } : result;
 }

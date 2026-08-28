@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { Avatar } from "@/components/Avatar";
 import Link from "next/link";
-import { MapPinIcon, BedIcon, StarIcon, ShieldCheckIcon, SearchIcon } from "@/components/Icons";
+import { MapPinIcon, BedIcon, StarIcon, ShieldCheckIcon, SearchIcon, WifiIcon } from "@/components/Icons";
+import { Reveal } from "@/components/Reveal";
 import type { HostProfile } from "@/types";
 import styles from "./explore.module.css";
 
@@ -36,8 +38,6 @@ export default function ExploreClient({ hosts: allHosts }: { hosts: HostProfile[
 
     return results;
   }, [search, filter, allHosts]);
-
-  const initials = (h: HostProfile) => `${h.firstName[0]}${h.lastName[0]}`;
 
   return (
     <>
@@ -78,37 +78,50 @@ export default function ExploreClient({ hosts: allHosts }: { hosts: HostProfile[
 
       {filteredHosts.length > 0 ? (
         <div className={styles.grid}>
-          {filteredHosts.map((host) => (
-            <Link href={`/profile/${host.id}`} key={host.id} className={`panel panel-hover ${styles.card}`}>
-              <div className={styles.cardTop}>
-                <div className={`avatar avatar-xl ${styles.cardAvatar}`}>{initials(host)}</div>
-                {host.isVerified && (
-                  <span className="badge badge-verified">
-                    <ShieldCheckIcon size={14} /> Verified
-                  </span>
-                )}
-              </div>
-              <div className={styles.cardBody}>
-                <h3 className={styles.cardName}>
-                  {host.firstName} {host.lastName}
-                </h3>
-                <p className={styles.cardLocation} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                  <MapPinIcon size={14} /> {host.home?.locationName}
-                </p>
-                <div className={styles.cardMeta} style={{ display: "flex", gap: 12 }}>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                    <BedIcon size={14} /> {host.home?.sleepingArrangement}
-                  </span>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                    <StarIcon size={14} fill="var(--terracotta-500)" /> {host.reviewCount} reviews
-                  </span>
+          {filteredHosts.map((host, i) => (
+            <Reveal key={host.id} delay={Math.min(i, 6) * 50}>
+              <Link href={`/profile/${host.id}`} className={`panel panel-hover press-card ${styles.card}`}>
+                <div className={styles.cardTop}>
+                  <Avatar src={host.avatarUrl} firstName={host.firstName} lastName={host.lastName} size="xl" className={styles.cardAvatar} />
+                  {/* Verified is a real, checked trust signal and stays the
+                      one thing badged up here. WiFi speed is a host's own
+                      unverified claim -- it used to sit right next to
+                      Verified as an equally loud pill, which visually
+                      overstated it. Demoted into the plain metadata row
+                      below, alongside sleeping arrangement and reviews. */}
+                  {host.isVerified && (
+                    <span className="badge badge-verified">
+                      <ShieldCheckIcon size={14} /> Verified
+                    </span>
+                  )}
                 </div>
-                <p className={styles.cardBio}>
-                  {host.bio.slice(0, 120)}
-                  {host.bio.length > 120 ? "…" : ""}
-                </p>
-              </div>
-            </Link>
+                <div className={styles.cardBody}>
+                  <h3 className={styles.cardName}>
+                    {host.firstName} {host.lastName}
+                  </h3>
+                  <p className={styles.cardLocation} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <MapPinIcon size={14} /> {host.home?.locationName}
+                  </p>
+                  <div className={styles.cardMeta} style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                      <BedIcon size={14} /> {host.home?.sleepingArrangement}
+                    </span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                      <StarIcon size={14} fill="var(--terracotta-500)" /> {host.reviewCount} reviews
+                    </span>
+                    {host.home?.wifiMbps != null && (
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title="Self-reported by the host">
+                        <WifiIcon size={14} /> {host.home.wifiMbps} Mbps
+                      </span>
+                    )}
+                  </div>
+                  <p className={styles.cardBio}>
+                    {host.bio.slice(0, 120)}
+                    {host.bio.length > 120 ? "…" : ""}
+                  </p>
+                </div>
+              </Link>
+            </Reveal>
           ))}
         </div>
       ) : allHosts.length === 0 ? (
@@ -118,7 +131,7 @@ export default function ExploreClient({ hosts: allHosts }: { hosts: HostProfile[
           </div>
           <h3>No hosts here yet</h3>
           <p className="text-secondary">
-            Nomads is just getting started in this area. Be the first to <Link href="/profile/edit/hosting">open your door</Link>, or check
+            4dnomads is just getting started in this area. Be the first to <Link href="/profile/edit/hosting">open your door</Link>, or check
             back soon.
           </p>
         </div>

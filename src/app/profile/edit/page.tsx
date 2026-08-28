@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireSession } from "@/lib/session";
 import { getRequestsForUser } from "@/lib/data/requests";
+import { MobileHeader } from "@/components/MobileHeader";
 import DeleteAccountButton from "./DeleteAccountButton";
 import styles from "../../dashboard/dashboard.module.css";
 
@@ -13,30 +14,42 @@ export default async function EditProfileSelector() {
   const reviewable = allRequests.filter((r) => r.travelerId === session.authUserId && r.status === "completed");
 
   return (
-    <div className={styles.page}>
+    <>
+      <MobileHeader title="Profile Customizations" backHref="/dashboard" />
+      <div className={styles.page}>
       <div className={styles.container} style={{ maxWidth: 640 }}>
-        <header className={styles.header}>
+        <header className={`${styles.header} desktop-only`}>
           <h1>Profile Customizations</h1>
           <p className="text-secondary text-sm">Update your public traveler card and hosting criteria.</p>
         </header>
 
         <div className="flex flex-col gap-4">
-          <div className="panel panel-padded flex items-center justify-between">
+          <div className="panel panel-padded row-actions">
+            <div>
+              <h3 className="font-semibold">Photo, Name & Bio</h3>
+              <p className="text-secondary text-sm">Your public traveler card: the photo, name, bio, languages and interests other members see.</p>
+            </div>
+            <Link href="/profile/edit/details" className="btn btn-primary">
+              Edit Profile
+            </Link>
+          </div>
+
+          <div className="panel panel-padded row-actions">
             <div>
               <h3 className="font-semibold">Hosting Rules & Calendar</h3>
               <p className="text-secondary text-sm">Blockout dates, set gender preferences, guest counts, and availability status.</p>
             </div>
-            <Link href="/profile/edit/hosting" className="btn btn-primary">
+            <Link href="/profile/edit/hosting" className="btn btn-secondary">
               Manage Rules
             </Link>
           </div>
 
-          <div className="panel panel-padded flex items-center justify-between">
+          <div className="panel panel-padded row-actions">
             <div>
               <h3 className="font-semibold">Write Pending References</h3>
               <p className="text-secondary text-sm">Write reviews for completed stays. Visible once your host reviews you too, or after 14 days.</p>
             </div>
-            <div className="flex flex-col gap-2" style={{ minWidth: 160 }}>
+            <div className="flex flex-col gap-2">
               {reviewable.length > 0 ? (
                 reviewable.map((req) => (
                   <Link key={req.id} href={`/reviews/write/${req.id}`} className="btn btn-secondary btn-sm" style={{ textAlign: "center" }}>
@@ -49,7 +62,7 @@ export default async function EditProfileSelector() {
             </div>
           </div>
 
-          <div className="panel panel-padded flex items-center justify-between">
+          <div className="panel panel-padded row-actions">
             <div>
               <h3 className="font-semibold">Delete Account</h3>
               <p className="text-secondary text-sm">Removes your personal info. Past stays and messages remain for the other party&apos;s records.</p>
@@ -58,6 +71,7 @@ export default async function EditProfileSelector() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

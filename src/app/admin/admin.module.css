@@ -79,8 +79,8 @@
 }
 
 .statIcon {
-  font-size: 1.5rem;
-  display: block;
+  display: flex;
+  color: var(--primary);
   margin-bottom: var(--space-2);
 }
 

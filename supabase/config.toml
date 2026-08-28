@@ -147,9 +147,19 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "http://127.0.0.1:3000"
+site_url = "https://4dnomads.com.tr"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+# site_url is production because this config is pushed to the linked production
+# project and is what confirmation-email links are built from; the localhost
+# entries below keep local dev sign-in working against the same project.
+additional_redirect_urls = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  # Custom-scheme deep link the packaged app returns to after Google consent
+  # runs in the system browser. Must match NATIVE_OAUTH_REDIRECT in
+  # src/lib/native/oauth.ts and the intent filter in AndroidManifest.xml.
+  "tr.com.fourdnomads.app://auth/callback",
+]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to the local API URL (http://127.0.0.1:<port>/auth/v1).
@@ -202,25 +212,34 @@ enable_signup = true
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
-enable_confirmations = false
+#
+# Turned on 2026-08-27 once 4dnomads.com.tr was verified as a Resend sending
+# domain, so admin_email below is a real deliverable sender rather than
+# Resend's sandbox address. This blocks sign-in until the emailed link is
+# clicked, so it must never be true while the sender is undeliverable --
+# that would lock every new user out of their own account.
+enable_confirmations = true
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
 secure_password_change = false
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
-max_frequency = "1s"
+max_frequency = "1m0s"
 # Number of characters used in the email OTP.
 otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 otp_expiry = 3600
 
-# Use a production-ready SMTP server
-# [auth.email.smtp]
-# enabled = true
-# host = "smtp.sendgrid.net"
-# port = 587
-# user = "apikey"
-# pass = "env(SENDGRID_API_KEY)"
-# admin_email = "admin@email.com"
-# sender_name = "Admin"
+# Resend as the SMTP relay for Supabase Auth's built-in confirmation/reset
+# emails -- reuses Auth's existing token generation and verification flow
+# rather than reimplementing it. RESEND_API_KEY must be set as a local env
+# var before `supabase config push` (the CLI resolves env(...) client-side).
+[auth.email.smtp]
+enabled = true
+host = "smtp.resend.com"
+port = 465
+user = "resend"
+pass = "env(RESEND_API_KEY)"
+admin_email = "noreply@4dnomads.com.tr"
+sender_name = "4dnomads"
 
 # Uncomment to customize email template
 # [auth.email.template.invite]
@@ -301,6 +320,23 @@ max_frequency = "5s"
 # Use an external OAuth provider. The full list of providers are: `apple`, `azure`, `bitbucket`,
 # `discord`, `facebook`, `github`, `gitlab`, `google`, `keycloak`, `linkedin_oidc`, `notion`, `twitch`,
 # `twitter`, `x`, `slack`, `spotify`, `workos`, `zoom`.
+[auth.external.google]
+enabled = true
+# Web OAuth client from the Google Cloud console. The client ID is public (it
+# ships in the redirect URL); the secret must never be committed, hence the
+# env() indirection -- set SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET locally before
+# `supabase config push`.
+#
+# Authorised redirect URI to register in Google Cloud is Supabase's own
+# callback, NOT this app's: https://<project-ref>.supabase.co/auth/v1/callback
+# The app's /auth/callback is where Supabase then sends the user afterwards.
+client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
+redirect_uri = ""
+url = ""
+skip_nonce_check = false
+email_optional = false
+
 [auth.external.apple]
 enabled = false
 client_id = ""

@@ -1,9 +1,37 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { Avatar } from "@/components/Avatar";
 import { getHostProfile, getUserById } from "@/lib/data/profiles";
 import { getVouchesForUser } from "@/lib/data/forum";
+import { getTrustStats } from "@/lib/data/trust";
 import { getSession } from "@/lib/session";
 import { ShieldCheckIcon, StarIcon } from "@/components/Icons";
+import { TrustPanel } from "@/components/TrustPanel";
+import { MobileHeader } from "@/components/MobileHeader";
 import styles from "./profile.module.css";
+
+// A second fetch alongside the page component's own -- getHostProfile isn't
+// wrapped in React's cache() (nothing in this data layer is yet), so this is
+// a real extra round trip per request rather than a deduped one. Acceptable
+// for a detail page at current traffic; worth revisiting with cache() across
+// src/lib/data if profile pages become a hot path.
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const profile = await getHostProfile(id);
+  if (!profile) return { title: "Profile not found" };
+
+  const name = `${profile.firstName} ${profile.lastName}`;
+  const place = profile.home?.locationName;
+  return {
+    title: name,
+    description: profile.bio
+      ? profile.bio.slice(0, 155)
+      : place
+        ? `${profile.firstName} hosts travellers in ${place} through 4dnomads, a free hospitality exchange.`
+        : `${profile.firstName}'s profile on 4dnomads.`,
+    openGraph: { title: name, description: profile.bio?.slice(0, 155) },
+  };
+}
 
 export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -12,6 +40,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   if (!profile) {
     return (
       <div className={styles.page}>
+        <MobileHeader title="Profile" backHref="/explore" />
         <div className={styles.empty}>
           <h2>User not found</h2>
           <p className="text-secondary">This profile doesn&apos;t exist or has been removed.</p>
@@ -25,20 +54,24 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
 
   const session = await getSession();
   const isOwnProfile = profile.id === session?.authUserId;
-  const vouches = await getVouchesForUser(profile.id);
-  const initials = `${profile.firstName[0]}${profile.lastName[0]}`;
+  const [vouches, trustStats] = await Promise.all([
+    getVouchesForUser(profile.id),
+    getTrustStats(profile.id, profile.createdAt),
+  ]);
 
   const reviewAuthors = new Map(
     (await Promise.all(profile.reviews.map((r) => getUserById(r.authorId)))).map((u, i) => [profile.reviews[i].authorId, u])
   );
 
   return (
-    <div className={styles.page}>
+    <>
+      <MobileHeader title={`${profile.firstName} ${profile.lastName}`} backHref="/explore" />
+      <div className={styles.page}>
       <div className={styles.layout}>
         {/* ── Sidebar ── */}
         <aside className={styles.sidebar}>
           <div className={`panel panel-padded ${styles.avatarPanel}`}>
-            <div className={`avatar avatar-2xl ${styles.mainAvatar}`}>{initials}</div>
+            <Avatar src={profile.avatarUrl} firstName={profile.firstName} lastName={profile.lastName} size="2xl" className={styles.mainAvatar} />
             <h1 className={styles.name}>{profile.firstName} {profile.lastName}</h1>
             <p className={`text-secondary text-sm`}>{profile.home?.locationName}</p>
 
@@ -61,36 +94,37 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
             )}
           </div>
 
-          <div className="panel">
-            <div className="panel-header"><h3>Quick Info</h3></div>
-            <div className="panel-body">
-              <div className={styles.statRow}>
-                <span className="text-secondary text-sm">Response Rate</span>
-                <span className="font-semibold text-sm">{profile.responseRate}%</span>
-              </div>
-              <hr className="divider" />
-              <div className={styles.statRow}>
-                <span className="text-secondary text-sm">Languages</span>
-                <span className="font-semibold text-sm">{profile.languages.join(", ")}</span>
-              </div>
-              <hr className="divider" />
-              <div className={styles.statRow}>
-                <span className="text-secondary text-sm">Member Since</span>
-                <span className="font-semibold text-sm">{new Date(profile.createdAt).getFullYear()}</span>
-              </div>
-              {profile.averageRating > 0 && (
-                <>
-                  <hr className="divider" />
+          <TrustPanel
+            stats={trustStats}
+            isVerified={profile.isVerified}
+            firstName={profile.firstName}
+            responseRate={profile.responseRate}
+          />
+
+          {(profile.languages.length > 0 || profile.averageRating > 0) && (
+            <div className="panel">
+              <div className="panel-header"><h3>Quick Info</h3></div>
+              <div className="panel-body">
+                {profile.languages.length > 0 && (
                   <div className={styles.statRow}>
-                    <span className="text-secondary text-sm">Rating</span>
-                    <span className="font-semibold text-sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                      <StarIcon size={14} fill="var(--terracotta-500)" /> {profile.averageRating} / 5
-                    </span>
+                    <span className="text-secondary text-sm">Languages</span>
+                    <span className="font-semibold text-sm">{profile.languages.join(", ")}</span>
                   </div>
-                </>
-              )}
+                )}
+                {profile.averageRating > 0 && (
+                  <>
+                    {profile.languages.length > 0 && <hr className="divider" />}
+                    <div className={styles.statRow}>
+                      <span className="text-secondary text-sm">Rating</span>
+                      <span className="font-semibold text-sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                        <StarIcon size={14} fill="var(--terracotta-500)" /> {profile.averageRating} / 5
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </aside>
 
         {/* ── Main Content ── */}
@@ -123,6 +157,12 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
                   <div className={styles.homeItem}>
                     <span className="text-secondary text-xs">Max Guests</span>
                     <span className="font-medium">{profile.home.maxGuests}</span>
+                  </div>
+                  <div className={styles.homeItem}>
+                    <span className="text-secondary text-xs">Internet</span>
+                    <span className="font-medium">
+                      {profile.home.wifiMbps != null ? `${profile.home.wifiMbps} Mbps (self-reported)` : "Not specified"}
+                    </span>
                   </div>
                   <div className={styles.homeItem}>
                     <span className="text-secondary text-xs">Smoking</span>
@@ -175,9 +215,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
                       <div key={review.id} className={styles.reviewItem}>
                         <div className={styles.reviewHeader}>
                           <div className={styles.reviewAuthor}>
-                            <div className="avatar avatar-sm">
-                              {author ? `${author.firstName[0]}${author.lastName[0]}` : "?"}
-                            </div>
+                            <Avatar src={author?.avatarUrl} firstName={author?.firstName ?? "?"} lastName={author?.lastName} size="sm" />
                             <div>
                               <span className="font-semibold text-sm">
                                 {author?.firstName} {author?.lastName}
@@ -187,7 +225,11 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
                               </span>
                             </div>
                           </div>
-                          <span className="text-sm">{"⭐".repeat(review.rating)}</span>
+                          <span className="text-sm" style={{ display: "inline-flex", gap: 2 }}>
+                            {Array.from({ length: review.rating }, (_, i) => (
+                              <StarIcon key={i} size={14} fill="var(--terracotta-500)" />
+                            ))}
+                          </span>
                         </div>
                         <p className={styles.reviewText}>{review.text}</p>
                       </div>
@@ -219,7 +261,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
                         &quot;{v.text}&quot;
                       </p>
                       <span className="text-xs font-semibold text-secondary">
-                        — Vouched by {v.author.firstName} {v.author.lastName[0]}.
+                        Vouched by {v.author.firstName} {v.author.lastName[0]}.
                       </span>
                     </div>
                   ))}
@@ -231,6 +273,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

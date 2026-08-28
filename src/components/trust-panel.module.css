@@ -1,0 +1,135 @@
+.panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.header h3 {
+  font-size: var(--font-size-base);
+  margin: 0;
+}
+
+.verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--olive-600);
+  background: var(--olive-50);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+}
+
+.newcomer {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* The headline number carries the panel: vouches received is the one figure
+   that is hard to manufacture, since each one is another account's unique
+   row (one_vouch_per_pair). */
+.primary {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.primaryValue {
+  font-family: var(--font-serif);
+  font-size: var(--font-size-4xl);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--primary);
+}
+
+.primaryLabel {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+  padding: var(--space-3) var(--space-1);
+  background: var(--sand-50);
+  border-radius: var(--radius-md);
+}
+
+.statIcon {
+  display: flex;
+  color: var(--text-tertiary);
+  margin-bottom: 2px;
+}
+
+.statValue {
+  font-family: var(--font-serif);
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.statLabel {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+
+.meta {
+  margin: var(--space-4) 0 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.metaRow dt {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.metaRow dd {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+/* Deliberately down to 340px rather than a more typical 380: with exactly
+   three stats, dropping to two columns strands the third tile alone on its
+   own row, which reads worse than the slightly tighter three-up. Below 340px
+   there genuinely isn't room. */
+@media (max-width: 339px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

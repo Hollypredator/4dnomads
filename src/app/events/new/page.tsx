@@ -5,6 +5,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createLocalEventAction } from "@/lib/actions/community";
+import { MobileHeader } from "@/components/MobileHeader";
 import styles from "../../request/[hostId]/request.module.css";
 
 export default function NewEventPage() {
@@ -32,9 +33,11 @@ export default function NewEventPage() {
   };
 
   return (
-    <div className={styles.page}>
+    <>
+      <MobileHeader title="Create Hangout" backHref="/events" />
+      <div className={styles.page}>
       <div className={`panel panel-padded ${styles.card}`}>
-        <h1 className={styles.title} style={{ marginBottom: 24 }}>Create Hangout</h1>
+        <h1 className={`${styles.title} desktop-only`} style={{ marginBottom: 24 }}>Create Hangout</h1>
         <p className="text-secondary text-sm text-center" style={{ marginBottom: 32 }}>
           Organize a coffee meetup, a city walk, or a group dinner and connect with travelers nearby!
         </p>
@@ -126,6 +129,7 @@ export default function NewEventPage() {
           </button>
         </form>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

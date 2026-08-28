@@ -44,6 +44,9 @@ export function mapHomeRow(row: Record<string, unknown>): Home {
     kidFriendly: row.kid_friendly as boolean,
     wheelchairAccessible: row.wheelchair_accessible as boolean,
     blockoutDates: (row.blockout_dates as string[]) ?? [],
+    // Left as null rather than coerced to 0: "no answer" and "extremely slow"
+    // are different claims, and the UI renders them differently.
+    wifiMbps: (row.wifi_mbps as number | null) ?? null,
   };
 }
 

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { upsertHomeAction } from "@/lib/actions/homes";
+import { CheckIcon } from "@/components/Icons";
 import type { Home, HostingStatus } from "@/types";
 import styles from "./hosting.module.css";
 
@@ -10,6 +11,10 @@ type HomeInput = Omit<Home, "id" | "hostId">;
 export default function HostingForm({ home }: { home: HomeInput }) {
   const [hostingStatus, setHostingStatus] = useState<HostingStatus>(home.hostingStatus);
   const [maxGuests, setMaxGuests] = useState(home.maxGuests);
+  // Kept as a string so the field can be genuinely empty. Number state would
+  // force 0, and "0 Mbps" is a claim about the connection rather than an
+  // absence of one.
+  const [wifiMbps, setWifiMbps] = useState(home.wifiMbps == null ? "" : String(home.wifiMbps));
   const [sleepingArrangement, setSleepingArrangement] = useState(home.sleepingArrangement);
   const [smokingPolicy, setSmokingPolicy] = useState<Home["smokingPolicy"]>(home.smokingPolicy);
   const [petsInfo, setPetsInfo] = useState(home.petsInfo);
@@ -35,6 +40,7 @@ export default function HostingForm({ home }: { home: HomeInput }) {
       const result = await upsertHomeAction({
         sleepingArrangement,
         maxGuests,
+        wifiMbps: wifiMbps.trim() === "" ? null : Number(wifiMbps),
         houseRules,
         locationName,
         latitude,
@@ -66,8 +72,8 @@ export default function HostingForm({ home }: { home: HomeInput }) {
   return (
     <>
       {successMsg && (
-        <div className="badge badge-accepted btn-full" style={{ padding: 12, marginBottom: 24, fontSize: 14 }}>
-          ✓ Hosting preferences and calendar saved successfully!
+        <div className="badge badge-accepted btn-full" style={{ padding: 12, marginBottom: 24, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
+          <CheckIcon size={16} /> Hosting preferences and calendar saved successfully!
         </div>
       )}
       {error && (
@@ -86,7 +92,7 @@ export default function HostingForm({ home }: { home: HomeInput }) {
             <input type="text" className="form-input" value={locationName} maxLength={120} onChange={(e) => setLocationName(e.target.value)} placeholder="e.g. Kadikoy, Istanbul" required />
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div className="form-row-2">
             <div className="form-group">
               <label className="form-label">Latitude</label>
               <input type="number" step="any" className="form-input" value={latitude} onChange={(e) => setLatitude(Number(e.target.value))} required />
@@ -111,7 +117,24 @@ export default function HostingForm({ home }: { home: HomeInput }) {
             </select>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div className="form-row-2">
+            <div className="form-group">
+              <label className="form-label" htmlFor="wifiMbps">Internet speed</label>
+              <input
+                type="number"
+                id="wifiMbps"
+                className="form-input"
+                value={wifiMbps}
+                onChange={(e) => setWifiMbps(e.target.value)}
+                min={1}
+                max={10000}
+                placeholder="e.g. 250"
+                inputMode="numeric"
+              />
+              <span className="form-hint">
+                Download Mbps. Optional, and shown to guests as self-reported.
+              </span>
+            </div>
             <div className="form-group">
               <label className="form-label">Max Guests Allowed</label>
               <input type="number" className="form-input" value={maxGuests} onChange={(e) => setMaxGuests(Number(e.target.value))} min={1} max={20} />
@@ -138,7 +161,7 @@ export default function HostingForm({ home }: { home: HomeInput }) {
             </select>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div className="form-row-2">
             <div className="form-group">
               <label className="form-label">Smoking Policy</label>
               <select className="form-select" value={smokingPolicy} onChange={(e) => setSmokingPolicy(e.target.value as Home["smokingPolicy"])}>

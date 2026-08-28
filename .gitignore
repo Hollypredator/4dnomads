@@ -43,3 +43,9 @@ next-env.d.ts
 # supabase local dev
 /supabase/.temp/
 /supabase/.branches/
+
+# MCP server config -- can contain raw API keys/tokens in headers
+.mcp.json
+
+.vercel
+.env*

@@ -1,5 +1,6 @@
+import { cache } from "react";
 import { createClient } from "@/utils/supabase/server";
-import { unwrap, unwrapList, unwrapVoid, AppError } from "@/lib/errors";
+import { unwrap, unwrapList, unwrapVoid, unwrapMaybe, AppError } from "@/lib/errors";
 import { mapProfileRow } from "@/lib/data/mappers";
 import type {
   ForumTopicWithAuthor,
@@ -29,7 +30,7 @@ function mapTopicRow(row: Record<string, unknown>): ForumTopicWithAuthor {
 
 // ── Forum topics ──────────────────────────────
 
-export async function getForumTopics(cityFilter?: string): Promise<ForumTopicWithAuthor[]> {
+export const getForumTopics = cache(async (cityFilter?: string): Promise<ForumTopicWithAuthor[]> => {
   const supabase = await createClient();
   let query = supabase
     .from("forum_topics")
@@ -42,9 +43,9 @@ export async function getForumTopics(cityFilter?: string): Promise<ForumTopicWit
 
   const result = await query;
   return unwrapList(result, { op: "getForumTopics", args: { cityFilter } }).map(mapTopicRow);
-}
+});
 
-export async function getTopicById(topicId: string): Promise<ForumTopicWithAuthor | null> {
+export const getTopicById = cache(async (topicId: string): Promise<ForumTopicWithAuthor | null> => {
   const supabase = await createClient();
   const result = await supabase
     .from("forum_topics")
@@ -53,11 +54,11 @@ export async function getTopicById(topicId: string): Promise<ForumTopicWithAutho
     )
     .eq("id", topicId)
     .maybeSingle();
-  if (!result.data) return null;
-  return mapTopicRow(unwrap(result, { op: "getTopicById", args: { topicId } }));
-}
+  const row = unwrapMaybe(result, { op: "getTopicById", args: { topicId } });
+  return row ? mapTopicRow(row) : null;
+});
 
-export async function getTopicComments(topicId: string): Promise<(ForumComment & { author: ReturnType<typeof mapProfileRow> })[]> {
+export const getTopicComments = cache(async (topicId: string): Promise<(ForumComment & { author: ReturnType<typeof mapProfileRow> })[]> => {
   const supabase = await createClient();
   const result = await supabase
     .from("forum_comments")
@@ -73,7 +74,7 @@ export async function getTopicComments(topicId: string): Promise<(ForumComment &
     createdAt: row.created_at as string,
     author: mapProfileRow(row.author as Record<string, unknown>),
   }));
-}
+});
 
 export async function createForumTopic(
   authorId: string,
@@ -85,14 +86,14 @@ export async function createForumTopic(
     .insert({ author_id: authorId, city: data.city, category: data.category, title: data.title, content: data.content })
     .select("*")
     .single();
-  const row = unwrap(result, { op: "createForumTopic", args: { authorId, ...data } });
+  const row = unwrap(result, { op: "createForumTopic", args: { authorId, ...data }, mutation: true });
   return { ...mapTopicRow(row), upvotes: 0, commentCount: 0 };
 }
 
 export async function addForumComment(topicId: string, authorId: string, content: string) {
   const supabase = await createClient();
   const result = await supabase.from("forum_comments").insert({ topic_id: topicId, author_id: authorId, content }).select("*").single();
-  const row = unwrap(result, { op: "addForumComment", args: { topicId, authorId } });
+  const row = unwrap(result, { op: "addForumComment", args: { topicId, authorId }, mutation: true });
   return { id: row.id as string, topicId: row.topic_id as string, authorId: row.author_id as string, content: row.content as string, createdAt: row.created_at as string };
 }
 
@@ -114,7 +115,7 @@ export async function toggleTopicUpvote(topicId: string, userId: string) {
 
 // ── Community vouches ──────────────────────────────
 
-export async function getVouchesForUser(userId: string): Promise<CommunityVouchWithAuthor[]> {
+export const getVouchesForUser = cache(async (userId: string): Promise<CommunityVouchWithAuthor[]> => {
   const supabase = await createClient();
   const result = await supabase
     .from("community_vouches")
@@ -130,10 +131,10 @@ export async function getVouchesForUser(userId: string): Promise<CommunityVouchW
     createdAt: row.created_at as string,
     author: mapProfileRow(row.author as Record<string, unknown>),
   }));
-}
+});
 
 /** Newest vouches platform-wide, for the community hub sidebar. */
-export async function getRecentVouches(limit = 3) {
+export const getRecentVouches = cache(async (limit = 3) => {
   const supabase = await createClient();
   const result = await supabase
     .from("community_vouches")
@@ -150,7 +151,7 @@ export async function getRecentVouches(limit = 3) {
     author: mapProfileRow(row.author as Record<string, unknown>),
     target: mapProfileRow(row.target as Record<string, unknown>),
   }));
-}
+});
 
 export async function addVouch(authorId: string, targetId: string, text: string) {
   const supabase = await createClient();
@@ -158,13 +159,13 @@ export async function addVouch(authorId: string, targetId: string, text: string)
   if (result.error?.code === "23505") {
     throw new AppError("conflict", "You have already vouched for this person.", result.error);
   }
-  const row = unwrap(result, { op: "addVouch", args: { authorId, targetId } });
+  const row = unwrap(result, { op: "addVouch", args: { authorId, targetId }, mutation: true });
   return { id: row.id as string, authorId: row.author_id as string, targetId: row.target_id as string, text: row.text as string, createdAt: row.created_at as string };
 }
 
 // ── Emergency alerts ──────────────────────────────
 
-export async function getEmergencyAlerts(): Promise<EmergencyAlertWithAuthor[]> {
+export const getEmergencyAlerts = cache(async (): Promise<EmergencyAlertWithAuthor[]> => {
   const supabase = await createClient();
   const result = await supabase
     .from("emergency_alerts")
@@ -181,7 +182,7 @@ export async function getEmergencyAlerts(): Promise<EmergencyAlertWithAuthor[]> 
     isResolved: row.is_resolved as boolean,
     author: mapProfileRow(row.author as Record<string, unknown>),
   }));
-}
+});
 
 export async function createEmergencyAlert(
   authorId: string,
@@ -193,6 +194,6 @@ export async function createEmergencyAlert(
     .insert({ author_id: authorId, location_name: data.locationName, description: data.description, contact_info: data.contactInfo })
     .select("*")
     .single();
-  const row = unwrap(result, { op: "createEmergencyAlert", args: { authorId, ...data } });
+  const row = unwrap(result, { op: "createEmergencyAlert", args: { authorId, ...data }, mutation: true });
   return { id: row.id as string, authorId: row.author_id as string, locationName: row.location_name as string, description: row.description as string, contactInfo: row.contact_info as string, createdAt: row.created_at as string, isResolved: row.is_resolved as boolean };
 }

@@ -59,11 +59,13 @@
 }
 
 @media (max-width: 768px) {
-  .grid {
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-8);
-  }
-  .brand {
-    grid-column: 1 / -1;
+  /* No footer on mobile at all -- this is meant to package into an app
+     store build, and a site-map footer (Platform/Community/Legal link
+     columns, copyright line) reads as "web page", not "app". Real mobile
+     apps put that content in a Settings/About screen, not a persistent
+     scroll-to-the-bottom block. See MobileTabBar's "More" sheet for where
+     Support Us and legal-adjacent links live instead. */
+  .footer {
+    display: none;
   }
 }

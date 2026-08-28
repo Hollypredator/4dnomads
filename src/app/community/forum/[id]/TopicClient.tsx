@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Avatar } from "@/components/Avatar";
 import { addForumCommentAction, toggleTopicUpvoteAction } from "@/lib/actions/community";
 import { ShieldCheckIcon } from "@/components/Icons";
 import type { ForumTopicWithAuthor, ForumComment, User } from "@/types";
@@ -49,7 +50,7 @@ export default function TopicClient({ topic, initialComments }: { topic: ForumTo
         <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "2rem", marginBottom: 16 }}>{topic.title}</h1>
 
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24, paddingBottom: 16, borderBottom: "1px solid var(--border)" }}>
-          <div className="avatar avatar-md">{topic.author.firstName[0]}</div>
+          <Avatar src={topic.author.avatarUrl} firstName={topic.author.firstName} lastName={topic.author.lastName} size="md" />
           <div>
             <span className="font-semibold text-sm">
               {topic.author.firstName} {topic.author.lastName}
@@ -74,7 +75,7 @@ export default function TopicClient({ topic, initialComments }: { topic: ForumTo
         {comments.map((comment) => (
           <div key={comment.id} className="panel panel-padded">
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-              <div className="avatar avatar-sm">{comment.author.firstName[0]}</div>
+              <Avatar src={comment.author.avatarUrl} firstName={comment.author.firstName} lastName={comment.author.lastName} size="sm" />
               <div>
                 <span className="font-semibold text-sm">
                   {comment.author.firstName} {comment.author.lastName}

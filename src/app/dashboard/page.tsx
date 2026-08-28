@@ -1,4 +1,5 @@
 import { requireSession } from "@/lib/session";
+import { AppBar } from "@/components/AppBar";
 import { getRequestsForUser } from "@/lib/data/requests";
 import DashboardClient from "./DashboardClient";
 import styles from "./dashboard.module.css";
@@ -11,6 +12,8 @@ export default async function DashboardPage() {
   const allRequests = await getRequestsForUser(session.authUserId);
 
   return (
+    <>
+      <AppBar />
     <div className={styles.page}>
       <div className={styles.container}>
         <header className={styles.header}>
@@ -21,5 +24,6 @@ export default async function DashboardPage() {
         <DashboardClient requests={allRequests} currentUserId={session.authUserId} />
       </div>
     </div>
+    </>
   );
 }

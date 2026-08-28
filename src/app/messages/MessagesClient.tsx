@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Avatar } from "@/components/Avatar";
 import Link from "next/link";
 import { sendMessageAction } from "@/lib/actions/messages";
+import { ArrowLeftIcon, MessageIcon } from "@/components/Icons";
 import type { MessageThread, Message } from "@/types";
 import styles from "./messages.module.css";
 
@@ -17,25 +19,37 @@ function timeAgo(dateStr: string) {
 }
 
 export default function MessagesClient({ threads, currentUserId }: { threads: MessageThread[]; currentUserId: string }) {
-  const [activeThreadId, setActiveThreadId] = useState<string | null>(threads[0]?.stayRequest?.id ?? null);
+  // Starts with nothing selected (rather than auto-opening threads[0]) so
+  // mobile, which shows only one pane at a time, opens on the thread list
+  // instead of dropping straight into a chat the user never chose.
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [optimistic, setOptimistic] = useState<Message[]>([]);
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
 
-  const activeThread = threads.find((t) => t.stayRequest?.id === activeThreadId);
+  // A thread is keyed by whichever side it has -- a 1:1 stay request or a
+  // group event chat -- so the two thread kinds can share one selection/send
+  // path instead of the UI only ever knowing about stay requests.
+  const threadKey = (t: MessageThread) => t.stayRequest?.id ?? t.eventGroup?.id ?? `thread-${t.lastMessage.id}`;
+  const activeThread = threads.find((t) => threadKey(t) === activeThreadId);
   const allMessages = activeThread
-    ? [...activeThread.messages, ...optimistic.filter((m) => m.stayRequestId === activeThreadId)]
+    ? [
+        ...activeThread.messages,
+        ...optimistic.filter((m) => m.stayRequestId === activeThreadId || m.eventGroupId === activeThreadId),
+      ]
     : [];
 
   function send() {
     const content = newMessage.trim();
-    if (!content || !activeThreadId) return;
+    if (!content || !activeThreadId || !activeThread) return;
     setError("");
     setNewMessage("");
 
+    const target = activeThread.stayRequest ? { stayRequestId: activeThreadId } : { eventGroupId: activeThreadId };
+
     startTransition(async () => {
-      const result = await sendMessageAction({ stayRequestId: activeThreadId }, content);
+      const result = await sendMessageAction(target, content);
       if (result.ok) {
         setOptimistic((prev) => [...prev, result.message]);
       } else {
@@ -47,7 +61,7 @@ export default function MessagesClient({ threads, currentUserId }: { threads: Me
   return (
     <div className={styles.layout}>
       {/* Thread List */}
-      <aside className={styles.sidebar}>
+      <aside className={`${styles.sidebar} ${activeThreadId ? styles.mobileHidden : ""}`}>
         <div className={styles.sidebarHeader}>
           <h2>Messages</h2>
         </div>
@@ -55,17 +69,18 @@ export default function MessagesClient({ threads, currentUserId }: { threads: Me
           {threads.length > 0 ? (
             threads.map((thread) => {
               const otherUser = thread.otherUser;
-              const requestId = thread.stayRequest?.id ?? `thread-${thread.lastMessage.id}`;
-              const firstName = otherUser?.firstName ?? "User";
-              const lastName = otherUser?.lastName ?? "";
-              const initials = `${firstName[0] || "U"}${lastName[0] || ""}`;
-              const isActive = requestId === activeThreadId;
+              const threadId = threadKey(thread);
+              const displayName = otherUser ? otherUser.firstName : (thread.eventGroup?.title ?? "Group chat");
+              const initials = otherUser
+                ? `${otherUser.firstName[0] || "U"}${otherUser.lastName[0] || ""}`
+                : (thread.eventGroup?.title[0] ?? "G");
+              const isActive = threadId === activeThreadId;
               return (
-                <button key={requestId} className={`${styles.threadItem} ${isActive ? styles.threadActive : ""}`} onClick={() => setActiveThreadId(requestId)}>
+                <button key={threadId} className={`${styles.threadItem} ${isActive ? styles.threadActive : ""}`} onClick={() => setActiveThreadId(threadId)}>
                   <div className="avatar avatar-md">{initials}</div>
                   <div className={styles.threadInfo}>
                     <div className={styles.threadTop}>
-                      <span className="font-semibold text-sm">{firstName}</span>
+                      <span className="font-semibold text-sm">{displayName}</span>
                       <span className="text-xs text-secondary">{timeAgo(thread.lastMessage.createdAt)}</span>
                     </div>
                     <p className={styles.threadPreview}>{thread.lastMessage.content.slice(0, 50)}…</p>
@@ -76,36 +91,58 @@ export default function MessagesClient({ threads, currentUserId }: { threads: Me
             })
           ) : (
             <div className={styles.emptyThreads}>
-              <p className="text-secondary text-sm">No conversations yet. Once a stay request is accepted, you can message here.</p>
+              <p className="text-secondary text-sm">No conversations yet. Once a stay request is accepted or you RSVP to an event, you can message here.</p>
             </div>
           )}
         </div>
       </aside>
 
       {/* Chat Area */}
-      <div className={styles.chat}>
-        {activeThread && activeThread.otherUser ? (
+      <div className={`${styles.chat} ${!activeThreadId ? styles.mobileHidden : ""}`}>
+        {activeThread && (activeThread.otherUser || activeThread.eventGroup) ? (
           <>
             <div className={styles.chatHeader}>
               <div className={styles.chatHeaderInfo}>
-                <div className="avatar avatar-md">
-                  {activeThread.otherUser.firstName[0]}
-                  {activeThread.otherUser.lastName[0]}
-                </div>
-                <div>
-                  <span className="font-semibold">
-                    {activeThread.otherUser.firstName} {activeThread.otherUser.lastName}
-                  </span>
-                  {activeThread.stayRequest && (
+                <button className={styles.backButton} onClick={() => setActiveThreadId(null)} aria-label="Back to conversations">
+                  <ArrowLeftIcon size={20} />
+                </button>
+                {activeThread.otherUser ? (
+                  <>
+                    <Avatar src={activeThread.otherUser.avatarUrl} firstName={activeThread.otherUser.firstName} lastName={activeThread.otherUser.lastName} size="md" />
+                    <div>
+                      <span className="font-semibold">
+                        {activeThread.otherUser.firstName} {activeThread.otherUser.lastName}
+                      </span>
+                      {activeThread.stayRequest && (
+                        <span className="text-xs text-secondary" style={{ display: "block" }}>
+                          {activeThread.stayRequest.arrivalDate} → {activeThread.stayRequest.departureDate}
+                        </span>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="avatar avatar-md">{activeThread.eventGroup!.title[0] ?? "G"}</div>
+                )}
+                {!activeThread.otherUser && activeThread.eventGroup && (
+                  <div>
+                    <span className="font-semibold">{activeThread.eventGroup.title}</span>
                     <span className="text-xs text-secondary" style={{ display: "block" }}>
-                      {activeThread.stayRequest.arrivalDate} → {activeThread.stayRequest.departureDate}
+                      {activeThread.eventGroup.eventDate} · Group chat
                     </span>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
-              <Link href={`/profile/${activeThread.otherUser.id}`} className="btn btn-ghost btn-sm">
-                View Profile
-              </Link>
+              {activeThread.otherUser ? (
+                <Link href={`/profile/${activeThread.otherUser.id}`} className="btn btn-ghost btn-sm">
+                  View Profile
+                </Link>
+              ) : (
+                activeThread.eventGroup && (
+                  <Link href={`/events/${activeThread.eventGroup.id}`} className="btn btn-ghost btn-sm">
+                    View Event
+                  </Link>
+                )
+              )}
             </div>
 
             <div className={styles.messageList}>
@@ -150,7 +187,9 @@ export default function MessagesClient({ threads, currentUserId }: { threads: Me
           </>
         ) : (
           <div className={styles.emptyChatState}>
-            <div style={{ fontSize: "3rem", marginBottom: 16 }}>💬</div>
+            <div style={{ marginBottom: 16, color: "var(--text-tertiary)" }}>
+              <MessageIcon size={40} />
+            </div>
             <h3>Select a conversation</h3>
             <p className="text-secondary text-sm">Choose a thread from the sidebar to start chatting.</p>
           </div>

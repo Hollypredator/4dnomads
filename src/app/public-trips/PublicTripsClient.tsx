@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { SearchIcon, MapPinIcon, CalendarIcon, UserIcon, ShieldCheckIcon, GlobeIcon } from "@/components/Icons";
+import { Reveal } from "@/components/Reveal";
 import type { PublicTripWithUser } from "@/types";
 import styles from "./trips.module.css";
 
@@ -31,11 +32,12 @@ export default function PublicTripsClient({ trips }: { trips: PublicTripWithUser
 
       {filteredTrips.length > 0 ? (
         <div className={styles.grid}>
-          {filteredTrips.map((trip) => {
+          {filteredTrips.map((trip, i) => {
             const initials = `${trip.traveler.firstName[0]}${trip.traveler.lastName[0]}`;
             const isInvited = invitesSent[trip.id];
             return (
-              <div key={trip.id} className="panel panel-hover panel-padded flex flex-col justify-between">
+              <Reveal key={trip.id} delay={Math.min(i, 6) * 50}>
+              <div className="panel panel-hover panel-padded press-card flex flex-col justify-between">
                 <div>
                   <div className={styles.userSection}>
                     <div className="avatar avatar-md">{initials}</div>
@@ -87,6 +89,7 @@ export default function PublicTripsClient({ trips }: { trips: PublicTripWithUser
                   </Link>
                 </div>
               </div>
+              </Reveal>
             );
           })}
         </div>

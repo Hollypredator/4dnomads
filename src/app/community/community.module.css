@@ -145,8 +145,8 @@
 }
 
 .emergencyBanner {
-  background: linear-gradient(135deg, #fef2f2, #fee2e2);
-  border: 1px solid #fca5a5;
+  background: linear-gradient(135deg, var(--error-light), var(--m3-error-container));
+  border: 1px solid var(--m3-error-container);
   border-radius: var(--radius-lg);
   padding: var(--space-5);
   margin-bottom: var(--space-6);
@@ -156,7 +156,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  color: #dc2626;
+  color: var(--m3-on-error-container);
   font-weight: 700;
   font-size: var(--font-size-sm);
   margin-bottom: var(--space-2);

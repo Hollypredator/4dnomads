@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createForumTopicAction } from "@/lib/actions/community";
+import { MobileHeader } from "@/components/MobileHeader";
 import type { ForumTopicWithAuthor } from "@/types";
 
 const CATEGORIES: ForumTopicWithAuthor["category"][] = ["Hosting Q&A", "Meetups & Coffee", "Visa & Nomad Tips", "Travel Buddies"];
@@ -30,10 +31,12 @@ export default function NewTopicPage() {
   };
 
   return (
-    <div className="page-padding">
+    <>
+      <MobileHeader title="New Discussion" backHref="/community" />
+      <div className="page-padding">
       <div className="container container-sm">
         <div className="panel panel-padded">
-          <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "2rem", marginBottom: 8 }}>Start a Community Discussion</h1>
+          <h1 className="desktop-only" style={{ fontFamily: "var(--font-serif)", fontSize: "2rem", marginBottom: 8 }}>Start a Community Discussion</h1>
           <p className="text-secondary text-sm" style={{ marginBottom: 24 }}>
             Ask for local advice, share nomad tips, or organize a hangout.
           </p>
@@ -105,5 +108,6 @@ export default function NewTopicPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

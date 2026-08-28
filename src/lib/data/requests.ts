@@ -1,5 +1,6 @@
+import { cache } from "react";
 import { createClient } from "@/utils/supabase/server";
-import { unwrap, unwrapList, AppError } from "@/lib/errors";
+import { unwrap, unwrapList } from "@/lib/errors";
 import { mapStayRequestRow, mapProfileRow } from "@/lib/data/mappers";
 import type { StayRequestWithUsers } from "@/types";
 
@@ -7,7 +8,7 @@ const PROFILE_COLUMNS =
   "id, first_name, last_name, email, avatar_url, bio, languages, interests, is_verified, is_banned, created_at";
 
 /** Replaces mock-data.ts getRequestsForUser(). RLS already scopes rows to the caller; the .eq is defense in depth, not the only guard. */
-export async function getRequestsForUser(userId: string): Promise<StayRequestWithUsers[]> {
+export const getRequestsForUser = cache(async (userId: string): Promise<StayRequestWithUsers[]> => {
   const supabase = await createClient();
   const result = await supabase
     .from("stay_requests")
@@ -21,7 +22,7 @@ export async function getRequestsForUser(userId: string): Promise<StayRequestWit
     traveler: mapProfileRow(row.traveler as Record<string, unknown>),
     host: mapProfileRow(row.host as Record<string, unknown>),
   }));
-}
+});
 
 export interface CreateStayRequestInput {
   hostId: string;
@@ -53,7 +54,7 @@ export async function createStayRequest(travelerId: string, input: CreateStayReq
     .select("*")
     .single();
 
-  return mapStayRequestRow(unwrap(result, { op: "createStayRequest", args: { travelerId, ...input } }));
+  return mapStayRequestRow(unwrap(result, { op: "createStayRequest", args: { travelerId, ...input }, mutation: true }));
 }
 
 export type StayRequestAction = "accept" | "decline" | "cancel";
@@ -71,8 +72,8 @@ export async function updateStayRequestStatus(requestId: string, action: StayReq
 
   const result = await supabase.from("stay_requests").update({ status: nextStatus }).eq("id", requestId).select("*").single();
 
-  if (result.error?.code === "42501") {
-    throw new AppError("forbidden", "You are not allowed to make that change to this request.", result.error);
-  }
-  return mapStayRequestRow(unwrap(result, { op: "updateStayRequestStatus", args: { requestId, action } }));
+  // classify() already maps 42501 (raised by stay_requests_guard_transition)
+  // to "forbidden" -- no special-case needed here; mutation:true covers the
+  // sibling case where RLS denies silently (null data, no error) instead.
+  return mapStayRequestRow(unwrap(result, { op: "updateStayRequestStatus", args: { requestId, action }, mutation: true }));
 }

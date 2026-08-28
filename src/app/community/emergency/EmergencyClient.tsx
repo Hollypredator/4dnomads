@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Avatar } from "@/components/Avatar";
 import Link from "next/link";
 import { createEmergencyAlertAction } from "@/lib/actions/community";
-import { HeartIcon, ShieldCheckIcon } from "@/components/Icons";
+import { HeartIcon, ShieldCheckIcon, AlertIcon, MapPinIcon } from "@/components/Icons";
+import { MobileHeader } from "@/components/MobileHeader";
 import type { EmergencyAlertWithAuthor } from "@/types";
 
 export default function EmergencyClient({ initialAlerts }: { initialAlerts: EmergencyAlertWithAuthor[] }) {
@@ -33,32 +35,35 @@ export default function EmergencyClient({ initialAlerts }: { initialAlerts: Emer
   }
 
   return (
-    <div className="page-padding">
+    <>
+      <MobileHeader title="Emergency Network" backHref="/community" />
+      <div className="page-padding">
       <div className="container container-md">
-        <Link href="/community" className="btn btn-ghost btn-sm" style={{ marginBottom: 24 }}>
+        <Link href="/community" className="btn btn-ghost btn-sm desktop-only" style={{ marginBottom: 24 }}>
           ← Back to Community
         </Link>
 
+        {/* Icon stacked above the title rather than beside it: at 32px the
+            heading wraps to three lines on a phone, and a side-by-side icon
+            ends up floating against the middle of that block. */}
         <header style={{ marginBottom: 32 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-            <div style={{ color: "#dc2626" }}>
-              <HeartIcon size={32} />
-            </div>
-            <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "2.25rem" }}>Emergency Hospitality Network</h1>
+          <div style={{ color: "var(--error)", marginBottom: 12 }}>
+            <HeartIcon size={36} />
           </div>
+          <h1 style={{ fontSize: "var(--font-size-3xl)", marginBottom: 8 }}>Emergency Hospitality Network</h1>
           <p className="text-secondary text-sm" style={{ maxWidth: 640 }}>
             Facing a flight cancellation, sudden eviction, or safety emergency? Post an urgent 24-hour stay alert. Local hosts will reach out
             immediately.
           </p>
         </header>
 
-        <button className="btn btn-danger btn-lg" style={{ marginBottom: 32 }} onClick={() => setShowForm(!showForm)}>
-          {showForm ? "Cancel Alert Request" : "🚨 Send Urgent Emergency Stay Alert"}
+        <button className="btn btn-danger btn-lg" style={{ marginBottom: 32, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }} onClick={() => setShowForm(!showForm)}>
+          {!showForm && <AlertIcon size={18} />} {showForm ? "Cancel Alert Request" : "Send Urgent Emergency Stay Alert"}
         </button>
 
         {showForm && (
-          <form onSubmit={handleSubmit} className="panel panel-padded flex flex-col gap-4" style={{ marginBottom: 32, borderColor: "#fca5a5", background: "#fff5f5" }}>
-            <h3 style={{ fontSize: "1.25rem", color: "#dc2626" }}>Emergency Stay Form</h3>
+          <form onSubmit={handleSubmit} className="panel panel-padded flex flex-col gap-4" style={{ marginBottom: 32, borderColor: "var(--m3-error-container)", background: "var(--error-light)" }}>
+            <h3 style={{ color: "var(--m3-on-error-container)" }}>Emergency Stay Form</h3>
             <div className="form-group">
               <label className="form-label">Location (City & Area)</label>
               <input type="text" className="form-input" placeholder="e.g. Barcelona, El Prat Airport" value={locationName} maxLength={120} onChange={(e) => setLocationName(e.target.value)} required />
@@ -91,12 +96,23 @@ export default function EmergencyClient({ initialAlerts }: { initialAlerts: Emer
         )}
 
         <div className="flex flex-col gap-4">
-          {alerts.length === 0 && <p className="text-secondary text-sm">No active emergency alerts right now.</p>}
+          {alerts.length === 0 && (
+            <div className="empty-state">
+              <div className="empty-state-icon">
+                <HeartIcon size={40} />
+              </div>
+              <h3>No active alerts</h3>
+              <p>
+                Nobody needs emergency hosting right now. If that changes, alerts appear here and stay
+                up for 24 hours.
+              </p>
+            </div>
+          )}
           {alerts.map((alert) => (
-            <div key={alert.id} className="panel panel-padded" style={{ borderLeft: "4px solid #dc2626" }}>
+            <div key={alert.id} className="panel panel-padded" style={{ borderLeft: "4px solid var(--error)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div className="avatar avatar-md">{alert.author.firstName[0]}</div>
+                  <Avatar src={alert.author.avatarUrl} firstName={alert.author.firstName} lastName={alert.author.lastName} size="md" />
                   <div>
                     <span className="font-semibold">
                       {alert.author.firstName} {alert.author.lastName}
@@ -108,8 +124,8 @@ export default function EmergencyClient({ initialAlerts }: { initialAlerts: Emer
                   </div>
                 </div>
 
-                <span className="badge badge-declined" style={{ background: "#fee2e2", color: "#dc2626" }}>
-                  📍 {alert.locationName}
+                <span className="badge badge-declined" style={{ background: "var(--error-light)", color: "var(--m3-on-error-container)", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                  <MapPinIcon size={13} /> {alert.locationName}
                 </span>
               </div>
 
@@ -126,5 +142,6 @@ export default function EmergencyClient({ initialAlerts }: { initialAlerts: Emer
         </div>
       </div>
     </div>
+    </>
   );
 }

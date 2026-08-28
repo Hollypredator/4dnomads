@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import { mapProfileRow } from "@/lib/data/mappers";
 import type { User } from "@/types";
 
 export type Role = "user" | "moderator" | "admin";
@@ -9,6 +10,8 @@ export interface Session {
   authUserId: string;
   role: Role;
   profile: User;
+  /** NULL until the user finishes or skips onboarding. */
+  onboardingCompletedAt: string | null;
 }
 
 // Decision 2 (docs/cutover-plan.md): the server is the only source of
@@ -28,7 +31,7 @@ export const getSession = cache(async (): Promise<Session | null> => {
   const { data: profile, error } = await supabase
     .from("profiles")
     .select(
-      "id, first_name, last_name, email, avatar_url, bio, languages, interests, is_verified, is_banned, created_at"
+      "id, first_name, last_name, email, avatar_url, bio, languages, interests, is_verified, is_banned, created_at, onboarding_completed_at"
     )
     .eq("id", authUser.id)
     .maybeSingle();
@@ -52,19 +55,11 @@ export const getSession = cache(async (): Promise<Session | null> => {
   return {
     authUserId: authUser.id,
     role,
-    profile: {
-      id: profile.id,
-      firstName: profile.first_name,
-      lastName: profile.last_name,
-      email: profile.email,
-      avatarUrl: profile.avatar_url,
-      bio: profile.bio,
-      languages: profile.languages ?? [],
-      interests: profile.interests ?? [],
-      isVerified: profile.is_verified,
-      createdAt: profile.created_at,
-      isBanned: profile.is_banned,
-    },
+    onboardingCompletedAt: profile.onboarding_completed_at ?? null,
+    // Delegates to the same mapper every other data/*.ts read uses, rather
+    // than a second hand-written copy -- the two had drifted (this version
+    // left bio as null instead of mapProfileRow's "" fallback).
+    profile: mapProfileRow(profile),
   };
 });
 

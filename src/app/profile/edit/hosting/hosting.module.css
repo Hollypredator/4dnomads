@@ -14,7 +14,7 @@
   justify-content: space-between; padding: 6px; font-weight: 500; font-size: var(--font-size-sm);
   transition: all var(--transition-fast);
 }
-.calendarDay:hover { border-color: var(--primary); background: var(--amber-50); }
+.calendarDay:hover { border-color: var(--primary); background: var(--terracotta-50); }
 
 .dayBlocked { background: var(--red-50); border-color: var(--red-100); color: var(--red-600); }
 .dayBlocked:hover { background: var(--red-100); border-color: var(--red-500); }

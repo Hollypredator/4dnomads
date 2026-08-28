@@ -1,13 +1,14 @@
+import { cache } from "react";
 import { createClient } from "@/utils/supabase/server";
 import { unwrap, unwrapList, AppError } from "@/lib/errors";
 import { mapReviewRow } from "@/lib/data/mappers";
 
 /** RLS already filters to the visible set (decision 7) -- what comes back IS "not blind". */
-export async function getReviewsForUser(userId: string) {
+export const getReviewsForUser = cache(async (userId: string) => {
   const supabase = await createClient();
   const result = await supabase.from("reviews").select("*").eq("target_id", userId);
   return unwrapList(result, { op: "getReviewsForUser", args: { userId } }).map(mapReviewRow);
-}
+});
 
 export interface SubmitReviewInput {
   stayRequestId: string;
@@ -39,5 +40,5 @@ export async function submitReview(authorId: string, input: SubmitReviewInput) {
   if (result.error?.code === "42501" || result.error?.code === "P0001") {
     throw new AppError("forbidden", result.error.message, result.error);
   }
-  return mapReviewRow(unwrap(result, { op: "submitReview", args: { authorId, ...input } }));
+  return mapReviewRow(unwrap(result, { op: "submitReview", args: { authorId, ...input }, mutation: true }));
 }
