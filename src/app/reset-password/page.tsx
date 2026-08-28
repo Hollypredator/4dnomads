@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { updatePasswordAction, type AuthFormState } from "@/lib/actions/auth";
+import { PASSWORD_REQUIREMENTS } from "@/lib/authPolicy";
 import { MobileHeader } from "@/components/MobileHeader";
 import styles from "../login/auth.module.css";
 
@@ -24,7 +25,7 @@ export default function ResetPasswordPage() {
           <div className="form-group">
             <label className="form-label" htmlFor="password">New Password</label>
             <input type="password" id="password" name="password" className="form-input" placeholder="At least 8 characters" required minLength={8} maxLength={200} />
-            <span className="form-hint">Minimum 8 characters</span>
+            <span className="form-hint">{PASSWORD_REQUIREMENTS}</span>
           </div>
 
           <div className="form-group">

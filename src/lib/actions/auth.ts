@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
+import { isValidPassword } from "@/lib/authPolicy";
 
 export interface AuthFormState {
   error?: string;
@@ -40,12 +41,16 @@ export async function registerAction(_prev: AuthFormState, formData: FormData): 
   const lastName = String(formData.get("lastName") ?? "").trim();
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
+  const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
   if (!firstName || !lastName || !email || !password) {
     return { error: "All fields are required." };
   }
-  if (password.length < 8) {
-    return { error: "Password must be at least 8 characters." };
+  if (!isValidPassword(password)) {
+    return { error: "Password must be at least 8 characters and include both a letter and a number." };
+  }
+  if (password !== confirmPassword) {
+    return { error: "Passwords do not match." };
   }
 
   const supabase = await createClient();
@@ -99,8 +104,8 @@ export async function updatePasswordAction(_prev: AuthFormState, formData: FormD
   const password = String(formData.get("password") ?? "");
   const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
-  if (password.length < 8) {
-    return { error: "Password must be at least 8 characters." };
+  if (!isValidPassword(password)) {
+    return { error: "Password must be at least 8 characters and include both a letter and a number." };
   }
   if (password !== confirmPassword) {
     return { error: "Passwords do not match." };

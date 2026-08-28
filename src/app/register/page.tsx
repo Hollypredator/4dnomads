@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { registerAction, type AuthFormState } from "@/lib/actions/auth";
+import { PASSWORD_REQUIREMENTS } from "@/lib/authPolicy";
 import { MobileHeader } from "@/components/MobileHeader";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 import styles from "../login/auth.module.css";
@@ -46,7 +47,12 @@ export default function RegisterPage() {
           <div className="form-group">
             <label className="form-label" htmlFor="regPassword">Password</label>
             <input type="password" id="regPassword" name="password" className="form-input" placeholder="At least 8 characters" required minLength={8} maxLength={200} />
-            <span className="form-hint">Minimum 8 characters</span>
+            <span className="form-hint">{PASSWORD_REQUIREMENTS}</span>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label" htmlFor="confirmPassword">Confirm Password</label>
+            <input type="password" id="confirmPassword" name="confirmPassword" className="form-input" placeholder="Repeat your password" required minLength={8} maxLength={200} />
           </div>
 
           {state.error && (

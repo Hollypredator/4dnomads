@@ -483,6 +483,11 @@ a {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  /* A grid item's default min-width is auto, which refuses to shrink below
+     its content's intrinsic width even inside a 1fr track -- this is what
+     let a .form-row-2 column (e.g. Last Name) overflow its card at widths
+     just above the 480px single-column breakpoint below. */
+  min-width: 0;
 }
 
 /* Shared 2-up form row (e.g. first/last name, guests/arrangement). Several
