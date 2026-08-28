@@ -9,6 +9,11 @@ export interface AuthFormState {
   error?: string;
 }
 
+export interface RequestPasswordResetState {
+  error?: string;
+  sent?: boolean;
+}
+
 export async function loginAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
@@ -61,6 +66,62 @@ export async function registerAction(_prev: AuthFormState, formData: FormData): 
   // Straight into onboarding: a brand-new account has no photo, bio or
   // interests, and the dashboard has nothing to show it.
   redirect("/onboarding");
+}
+
+/**
+ * Sends a password-reset email. Always reports success regardless of
+ * whether the address has an account -- same user-enumeration concern as
+ * loginAction's deliberately-vague "Invalid email or password."
+ */
+export async function requestPasswordResetAction(
+  _prev: RequestPasswordResetState,
+  formData: FormData
+): Promise<RequestPasswordResetState> {
+  const email = String(formData.get("email") ?? "").trim();
+  if (!email) {
+    return { error: "Email is required." };
+  }
+
+  const supabase = await createClient();
+  await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${await getOrigin()}/auth/callback?next=${encodeURIComponent("/reset-password")}`,
+  });
+
+  return { sent: true };
+}
+
+/**
+ * Sets a new password. Requires the temporary session established by
+ * exchanging the recovery link's code in /auth/callback -- there is no
+ * separate "reset token" passed through this form.
+ */
+export async function updatePasswordAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
+  const password = String(formData.get("password") ?? "");
+  const confirmPassword = String(formData.get("confirmPassword") ?? "");
+
+  if (password.length < 8) {
+    return { error: "Password must be at least 8 characters." };
+  }
+  if (password !== confirmPassword) {
+    return { error: "Passwords do not match." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect(`/login?error=${encodeURIComponent("This password reset link has expired. Please request a new one.")}`);
+  }
+
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/", "layout");
+  redirect("/dashboard");
 }
 
 /**

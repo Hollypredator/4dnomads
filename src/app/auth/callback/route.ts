@@ -40,14 +40,18 @@ export async function GET(request: Request) {
 
   // A first-time Google sign-in lands here with a profile that has no photo,
   // bio or interests, exactly like an email signup -- so it goes through the
-  // same onboarding rather than straight to the requested page.
+  // same onboarding rather than straight to the requested page. A password
+  // recovery link goes through this same code-exchange (resetPasswordForEmail
+  // uses the same PKCE flow as OAuth), so it's excluded here -- someone
+  // resetting their password needs to land on /reset-password regardless of
+  // onboarding status, not get diverted.
   const { data: profile } = await supabase
     .from("profiles")
     .select("onboarding_completed_at")
     .eq("id", (await supabase.auth.getUser()).data.user?.id ?? "")
     .maybeSingle();
 
-  if (profile && !profile.onboarding_completed_at) {
+  if (next !== "/reset-password" && profile && !profile.onboarding_completed_at) {
     return NextResponse.redirect(new URL("/onboarding", url.origin));
   }
 

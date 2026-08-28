@@ -32,38 +32,20 @@ for a legitimate grant belongs.
 
 ---
 
-## T27 — Require email confirmation  ⚠️ EDITED BUT NOT PUSHED
+## T27 — Require email confirmation ✅ DONE (2026-08-28)
 
-**Priority:** P1 (blocks real signups being trustworthy) · **Effort:** ~5m once unblocked · **Depends on:** RESEND_API_KEY
+`RESEND_API_KEY` set locally, `supabase config push` run, diff reviewed
+(`enable_confirmations: false → true`, real SMTP pass, correct `admin_email`/
+`sender_name`/`site_url`). User confirmed a real signup received the
+confirmation email and logged in successfully. Production no longer lets
+anyone register with an email address they don't own.
 
-**STATUS 2026-08-27:** `4dnomads.com.tr` is **verified** in Resend, and
-`supabase/config.toml` is already edited: `admin_email =
-noreply@4dnomads.com.tr`, `sender_name = "4dnomads"`, `site_url =
-https://4dnomads.com.tr`, `enable_confirmations = true`.
-
-**These edits are LOCAL ONLY — `supabase config push` has NOT been run.**
-The CLI resolves `pass = "env(RESEND_API_KEY)"` client-side, and that variable
-is not in `.env.local`, `.mcp.json`, or Vercel. Pushing without it would send
-an empty SMTP password to production while `enable_confirmations = true`,
-which locks every new signup out of their own account — the exact failure the
-old comment in config.toml warned about.
-
-**To finish:** put the Resend API key in `.env.local` as `RESEND_API_KEY=re_…`,
-then from the repo root: `set -a && . ./.env.local && set +a && npx supabase
-config push`. **Review the diff before confirming** — a previous run of this
-command proposed unrelated changes to `site_url`, MFA, and confirmation
-settings, so read every line rather than accepting blind. Then register with a
-real inbox and confirm the email actually arrives before trusting it.
-
-**Why it matters:** Until this is pushed, production still has
-`enable_confirmations = false`, so anyone can register with an email address
-they do not own and get a working account instantly.
-
-**Context:** The code path already works end-to-end and needs no changes --
-`registerAction` (`src/lib/actions/auth.ts`) calls `supabase.auth.signUp()`,
-which is what triggers the confirmation email once `enable_confirmations` is
-on. Test by registering with a real inbox you control and confirming the link
-arrives and works before flipping the flag on the shared/production project.
+**Follow-on found during this test:** the app had no "forgot password" flow
+at all -- fixed the same day. See `/forgot-password`, `/reset-password`,
+`requestPasswordResetAction`/`updatePasswordAction` in
+`src/lib/actions/auth.ts`, and the `/auth/callback` fix so a recovery link
+lands on `/reset-password` instead of being redirected to `/onboarding` for
+an account that hasn't finished it.
 
 ---
 
@@ -196,32 +178,25 @@ with "Your project path contains non-ASCII characters".
 
 ---
 
-## T31 — Finish Google Sign-In (needs Google Cloud credentials)
+## T31 — Finish Google Sign-In ✅ CONFIG DONE (2026-08-28), needs a real end-to-end test
 
-**Priority:** P1 · **Effort:** ~20m once credentials exist · **Depends on:** none
+**Google Cloud side done:** OAuth consent screen created and published
+(external, app name "4dnomads"), Web application OAuth client created with
+Supabase's callback (`https://eludihyzupcmczdjyqaw.supabase.co/auth/v1/callback`)
+as the authorised redirect URI. Client ID/secret set in `.env.local` and
+pushed via `supabase config push` (diff showed only the expected
+`[external.google] client_id`/`secret` change, nothing unrelated this time).
 
-**STATUS 2026-08-27:** All code is written and building. Verified against the
-live project that the only thing missing is the provider being enabled:
-`/auth/v1/authorize?provider=google` currently returns
-`{"error_code":"validation_failed","msg":"Unsupported provider: provider is not enabled"}`.
+**Verified:** clicking "Continue with Google" on `/login` now reaches Google's
+real account chooser (previously returned "provider is not enabled"). Not yet
+verified: a full round trip with a real Google account all the way to a
+created profile + onboarding -- do that next, watching in particular that
+`handle_new_user()` picks up `given_name`/`family_name`/`picture` correctly
+(migration `20260827000001_oauth_profile_metadata.sql`, already applied).
 
-**Already done:** `signInWithGoogleAction` (src/lib/actions/auth.ts),
+**Already done (unchanged):** `signInWithGoogleAction` (src/lib/actions/auth.ts),
 `/auth/callback` code-exchange route, `GoogleSignInButton` on both /login and
-/register, `[auth.external.google]` block in supabase/config.toml, and
-migration `20260827000001_oauth_profile_metadata.sql` which teaches
-`handle_new_user()` to read Google's `given_name`/`family_name`/`picture`
-(without it every Google signup would have been created as "New User").
-
-**To finish:**
-1. Google Cloud console → APIs & Services → Credentials → OAuth client ID →
-   type **Web application**.
-2. Authorised redirect URI must be **Supabase's** callback, not the app's:
-   `https://eludihyzupcmczdjyqaw.supabase.co/auth/v1/callback`
-3. Put the two values in `.env.local`:
-   `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID=…`
-   `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=…`
-4. `npx supabase config push` (review the diff), then `npx supabase db push`
-   for the migration.
+/register.
 
 **Native shell — BUILT 2026-08-27.** Google blocks OAuth inside embedded web
 views (`disallowed_useragent`), so the packaged app hands consent to the system
