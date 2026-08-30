@@ -55,6 +55,9 @@ export const metadata: Metadata = {
   // A phone number in a bio or house rules should not become a tap-to-call
   // link styled by the OS -- it breaks the layout and looks unowned.
   formatDetection: { telephone: false },
+  verification: {
+    google: "2w9G4d0MosTy3H_ict-Wbu5I_posyjbgboRrQNwYZts",
+  },
 };
 
 // viewportFit: "cover" lets the page draw under the notch/home-indicator on
